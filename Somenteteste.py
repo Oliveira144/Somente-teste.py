@@ -564,7 +564,7 @@ def determine_risk_level(analysis):
     return 'LOW'
 
 def get_best_recommendation():
-    results = st.session_state.results # LINHA CORRIGIDA
+    results = st.session_state.results
     if len(results) < 3:
         return {
             'type': 'AGUARDAR',
@@ -689,18 +689,18 @@ def main():
         }}
         
         .history-grid {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 10px 0;
-            justify-content: flex-start;
-            width: 100%;
+            display: flex !important; /* Adicionado !important para forçar a aplicação */
+            flex-wrap: wrap !important; /* Adicionado !important para forçar a aplicação */
+            gap: 8px !important;
+            padding: 10px 0 !important;
+            justify-content: flex-start !important;
+            width: 100% !important;
         }}
         .history-item {{
-            width: calc((100% / 6) - 8px); 
-            min-width: 50px; 
-            max-width: 60px; 
-            height: 60px;
+            width: calc((100% / 6) - 8px) !important; 
+            min-width: 50px !important; 
+            max-width: 60px !important; 
+            height: 60px !important;
             border-radius: 8px;
             display: flex;
             flex-direction: column;
@@ -833,17 +833,63 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Advanced Analysis Details (optional, could be in an expander)
+    # Advanced Analysis Details
     st.markdown("---")
     st.header("Análise Avançada")
     analysis = st.session_state.advanced_analysis
 
     if analysis and st.session_state.results:
         st.subheader("Padrões e Tendências")
-        st.json(analysis['patterns'])
+        # --- INÍCIO DA CORREÇÃO PARA EXIBIÇÃO LEGÍVEL DOS PADRÕES ---
+        patterns = analysis['patterns']
+
+        if patterns:
+            st.markdown("#### Sequências de Vitórias/Derrotas (Streaks)")
+            if patterns['streaks']['maxStreaks']:
+                st.write(f"- **Máximas:** Player: {patterns['streaks']['maxStreaks']['player']}, Banker: {patterns['streaks']['maxStreaks']['banker']}, Tie: {patterns['streaks']['maxStreaks']['tie']}")
+            if patterns['streaks']['avgStreaks']:
+                st.write(f"- **Médias:** Player: {patterns['streaks']['avgStreaks']['player']:.2f}, Banker: {patterns['streaks']['avgStreaks']['banker']:.2f}, Tie: {patterns['streaks']['avgStreaks']['tie']:.2f}")
+            if patterns['streaks']['currentStreak']:
+                st.write(f"- **Atual:** {patterns['streaks']['currentStreak']['type']} por {patterns['streaks']['currentStreak']['count']} rodada(s)")
+
+            st.markdown("#### Alternância")
+            if patterns['alternations']:
+                st.write(f"- Taxa de Alternância: {patterns['alternations']['rate']:.2f} (Padrão: {patterns['alternations']['pattern']})")
+                st.write(f"- Alternâncias: {patterns['alternations']['alternations']}, Consecutivos: {patterns['alternations']['consecutives']}")
+            
+            st.markdown("#### Números Quentes/Frios")
+            if patterns['hotCold']['player']['hot']:
+                st.write(f"- **Player Quentes:** {', '.join([f'{item['num']} ({item['count']})' for item in patterns['hotCold']['player']['hot']])}")
+            if patterns['hotCold']['player']['cold']:
+                st.write(f"- **Player Frios:** {', '.join([f'{item['num']} ({item['count']})' for item in patterns['hotCold']['player']['cold']])}")
+            if patterns['hotCold']['banker']['hot']:
+                st.write(f"- **Banker Quentes:** {', '.join([f'{item['num']} ({item['count']})' for item in patterns['hotCold']['banker']['hot']])}")
+            if patterns['hotCold']['banker']['cold']:
+                st.write(f"- **Banker Frios:** {', '.join([f'{item['num']} ({item['count']})' for item in patterns['hotCold']['banker']['cold']])}")
+
+            st.markdown("#### Distribuição vs. Expectativa Teórica")
+            if patterns['distribution']:
+                st.write(f"- Desvio Player: {patterns['distribution']['deviations']['player']:.2f}, Banker: {patterns['distribution']['deviations']['banker']:.2f}, Tie: {patterns['distribution']['deviations']['tie']:.2f}")
+                st.write(f"- Esperado: Player: {patterns['distribution']['expected']['player']:.2f}, Banker: {patterns['distribution']['expected']['banker']:.2f}, Tie: {patterns['distribution']['expected']['tie']:.2f}")
+
+            st.markdown("#### Correlações")
+            if patterns['correlations']:
+                st.write(f"- Correlação Player: {patterns['correlations']['playerNumberCorrelation']:.2f}")
+                st.write(f"- Correlação Banker: {patterns['correlations']['bankerNumberCorrelation']:.2f}")
+                st.write(f"- Correlação de Resultado (Lag 3): {patterns['correlations']['outcomeCorrelation']:.2f}")
+
+            st.markdown("#### Sequências Mais Frequentes")
+            if patterns['sequences']['topSequences']:
+                for seq_item in patterns['sequences']['topSequences']:
+                    st.write(f"- **{seq_item['sequence']}** (ocorrências: {seq_item['count']}, prob: {seq_item['probability']:.2%})")
+            else:
+                st.info("Adicione mais resultados para analisar sequências.")
+        else:
+            st.info("Adicione resultados para analisar padrões e tendências.")
+        # --- FIM DA CORREÇÃO PARA EXIBIÇÃO LEGÍVEL DOS PADRÕES ---
 
         st.subheader("Tendências Cíclicas")
-        st.json(analysis['cyclicalTrends'])
+        st.json(analysis['cyclicalTrends']) # Mantido JSON para esta seção, se desejar.
 
         st.subheader("Volatilidade e Momento")
         col_v, col_m = st.columns(2)
