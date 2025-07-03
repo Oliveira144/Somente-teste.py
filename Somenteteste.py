@@ -608,11 +608,11 @@ def perform_advanced_analysis():
 
     st.session_state.advanced_analysis = analysis
 
-# Interface do usuário completa com histórico no estilo Bac Bo
+# Interface do usuário completa com histórico organizado
 def main():
     st.set_page_config(layout="wide", page_title="Bac Bo Analyzer PRO")
     
-    # CSS personalizado ATUALIZADO com estilo de bolinhas
+    # CSS personalizado ATUALIZADO
     st.markdown("""
     <style>
         /* Estilos gerais */
@@ -626,60 +626,88 @@ def main():
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         
-        /* Estilo das bolinhas do Bac Bo */
+        /* Estilo BAC BO para dados */
         .dice-container {
             display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin-bottom: 3px;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 3px;
         }
         
-        .dice-circle {
-            width: 40px;
-            height: 40px;
+        .dice-value {
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 22px;
             color: white;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+            margin: 5px 0;
+        }
+        
+        .player-dice { 
+            background: linear-gradient(145deg, #1e88e5, #0d47a1);
+            border: 2px solid #90caf9;
+        }
+        
+        .banker-dice { 
+            background: linear-gradient(145deg, #e53935, #b71c1c);
+            border: 2px solid #ef9a9a;
+        }
+        
+        .result-dice {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: white;
+            margin: 8px auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+        
+        .player-result { 
+            background: linear-gradient(145deg, #1565c0, #0d47a1);
+            border: 2px solid #90caf9;
+        }
+        
+        .banker-result { 
+            background: linear-gradient(145deg, #c62828, #b71c1c);
+            border: 2px solid #ef9a9a;
+        }
+        
+        .tie-result { 
+            background: linear-gradient(145deg, #43a047, #2e7d32);
+            border: 2px solid #a5d6a7;
+        }
+        
+        .history-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .history-item {
+            background-color: #0e1117;
+            border-radius: 10px;
+            padding: 10px;
+            min-width: 100px;
+            text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        .player-dice { background: linear-gradient(145deg, #2193b0, #6dd5ed); }
-        .banker-dice { background: linear-gradient(145deg, #f85032, #e73827); }
-        
-        .result-circle {
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: white;
-            margin: 0 auto;
-        }
-        
-        .player-result { background-color: #4cc9f0; }
-        .banker-result { background-color: #f72585; }
-        .tie-result { background-color: #2ec4b6; }
-        
-        .history-item {
-            padding: 10px;
-            border-radius: 10px;
-            background-color: #0e1117;
-            text-align: center;
-            min-width: 80px;
-        }
-        
-        .input-dice {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0 5px;
+        .history-label {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 5px;
         }
         
         .input-label {
@@ -707,11 +735,11 @@ def main():
         # Métricas de desempenho
         st.metric("🤖 Performance IA", "Sistema")
         
-        # Botões de entrada - Estilo Bac Bo
+        # Botões de entrada
         with st.form("entry_form"):
             st.subheader("🎮 Adicionar Resultado")
             
-            # Layout de entrada com estilo de dados
+            # Layout de entrada
             col_p, col_b = st.columns(2)
             
             with col_p:
@@ -723,18 +751,18 @@ def main():
                 b_score = st.selectbox("Banker", options=list(range(2, 13)), label_visibility="collapsed")
             
             # Visualização dos dados selecionados
-            st.markdown("""
-            <div style="display: flex; justify-content: center; gap: 20px; margin: 15px 0;">
-                <div class="input-dice">
-                    <div class="input-label">PLAYER</div>
-                    <div class="dice-circle player-dice">%s</div>
+            st.markdown(f"""
+            <div style="display:flex; justify-content:center; gap:30px; margin:20px 0;">
+                <div style="text-align:center">
+                    <div>PLAYER</div>
+                    <div class="dice-value player-dice">{p_score}</div>
                 </div>
-                <div class="input-dice">
-                    <div class="input-label">BANKER</div>
-                    <div class="dice-circle banker-dice">%s</div>
+                <div style="text-align:center">
+                    <div>BANKER</div>
+                    <div class="dice-value banker-dice">{b_score}</div>
                 </div>
             </div>
-            """ % (p_score, b_score), unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
             
             if st.form_submit_button("🎯 Registrar Resultado", use_container_width=True):
                 add_result(p_score, b_score)
@@ -753,35 +781,44 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        # Histórico de resultados no estilo Bac Bo
+        # Histórico de resultados - Estilo BAC BO
         st.subheader("⏱️ Histórico Recente")
         
-        # Exibir os últimos 10 resultados em formato de bolinhas
-        history_cols = st.columns(10)
-        for i, result in enumerate(st.session_state.results[:10]):
-            with history_cols[i]:
-                # Determinar a cor do resultado
-                result_class = ""
-                if result['outcome'] == 'PLAYER':
-                    result_class = "player-result"
-                    result_char = "P"
-                elif result['outcome'] == 'BANKER':
-                    result_class = "banker-result"
-                    result_char = "B"
-                else:
-                    result_class = "tie-result"
-                    result_char = "T"
+        if not st.session_state.results:
+            st.info("Nenhum resultado registrado ainda")
+        else:
+            # Exibir em linhas de 5 resultados cada
+            for i in range(0, min(10, len(st.session_state.results)), 5):
+                row_results = st.session_state.results[i:i+5]
                 
-                st.markdown(f"""
-                <div class="history-item">
-                    <div class="dice-container">
-                        <div class="dice-circle player-dice">{result['player']}</div>
-                        <div class="dice-circle banker-dice">{result['banker']}</div>
-                    </div>
-                    <div class="result-circle {result_class}">{result_char}</div>
-                    <div style="font-size: 10px; margin-top: 5px;">{result['timestamp']}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                with st.container():
+                    st.markdown('<div class="history-row">', unsafe_allow_html=True)
+                    
+                    for result in row_results:
+                        # Determinar o valor do resultado (número vencedor)
+                        if result['outcome'] == 'PLAYER':
+                            result_value = result['player']
+                            result_class = "player-result"
+                        elif result['outcome'] == 'BANKER':
+                            result_value = result['banker']
+                            result_class = "banker-result"
+                        else:
+                            result_value = result['player']  # empate
+                            result_class = "tie-result"
+                        
+                        st.markdown(f"""
+                        <div class="history-item">
+                            <div class="history-label">Jogo #{result['gameNumber']}</div>
+                            <div style="display:flex; justify-content:center; gap:5px;">
+                                <div class="dice-value player-dice">{result['player']}</div>
+                                <div class="dice-value banker-dice">{result['banker']}</div>
+                            </div>
+                            <div class="result-dice {result_class}">{result_value}</div>
+                            <div style="font-size:10px; color:#bbb;">{result['timestamp']}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
 
     # Seção de análise detalhada
     st.divider()
@@ -789,22 +826,36 @@ def main():
     
     if st.session_state.results:
         analysis = st.session_state.advanced_analysis
+        
+        # Verificações de segurança
+        confidence = analysis.get('confidence', 0)
+        volatility = analysis.get('volatility', 0)
+        risk_level = analysis.get('riskLevel', 'N/A')
+        momentum = analysis.get('momentum', {})
+        patterns = analysis.get('patterns', {})
+        
+        alternations = patterns.get('alternations', {})
+        alternation_pattern = alternations.get('pattern', 'N/A')
+        
         a_col1, a_col2, a_col3 = st.columns(3)
         
         with a_col1:
-            st.metric("📈 Confiança do Sistema", f"{analysis['confidence']}%")
-            st.metric("⚡ Volatilidade", f"{analysis['volatility']}%")
+            st.metric("📈 Confiança do Sistema", f"{confidence}%")
+            st.metric("⚡ Volatilidade", f"{volatility}%")
             
         with a_col2:
-            momentum = analysis.get('momentum', {})
             if momentum:
-                st.metric("📊 Momentum Atual", momentum['direction'])
-                st.metric("💪 Força do Momentum", f"{momentum['strength']*100:.1f}%")
+                direction = momentum.get('direction', 'N/A')
+                strength = momentum.get('strength', 0)
+                st.metric("📊 Momentum Atual", direction)
+                st.metric("💪 Força do Momentum", f"{strength*100:.1f}%")
+            else:
+                st.metric("📊 Momentum Atual", "N/A")
+                st.metric("💪 Força do Momentum", "N/A")
             
         with a_col3:
-            st.metric("⚠️ Nível de Risco", analysis['riskLevel'])
-            st.metric("🔄 Padrão de Alternância", 
-                      analysis['patterns']['alternations']['pattern'] if 'patterns' in analysis else "N/A")
+            st.metric("⚠️ Nível de Risco", risk_level)
+            st.metric("🔄 Padrão de Alternância", alternation_pattern)
 
 if __name__ == "__main__":
     main()
