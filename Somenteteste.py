@@ -627,262 +627,105 @@ def main():
             border-radius: 10px;
             text-align: center;
             margin-bottom: 20px;
+            background-color: #1e2130;
+            border: 2px solid #4a4e69;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
-        .blue-box {
-            background-color: rgba(0, 0, 255, 0.1);
-            border: 1px solid blue;
+        .metric-box {
+            background-color: #0e1117;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin: 10px 0;
         }
-        .red-box {
-            background-color: rgba(255, 0, 0, 0.1);
-            border: 1px solid red;
-        }
-        .green-box {
-            background-color: rgba(0, 255, 0, 0.1);
-            border: 1px solid green;
-        }
-        .gray-box {
-            background-color: rgba(128, 128, 128, 0.1);
-            border: 1px solid gray;
-        }
-        .yellow-box {
-            background-color: rgba(255, 255, 0, 0.1);
-            border: 1px solid yellow;
-        }
-        /* HISTÓRICO ATUALIZADO - MAIS COMPACTO */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(20, 1fr);
-            gap: 2px;
-            margin-bottom: 15px;
-        }
-        .grid-item {
-            aspect-ratio: 1/1;
-            border-radius: 3px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 8px;
+        .player { color: #4cc9f0; }
+        .banker { color: #f72585; }
+        .tie { color: #2ec4b6; }
+        .history-item {
+            border-radius: 10px;
+            padding: 8px;
+            margin: 5px 0;
+            text-align: center;
             font-weight: bold;
-            color: white;
-            padding: 1px;
-            position: relative;
-        }
-        .grid-item.rare::after {
-            content: "★";
-            position: absolute;
-            top: 1px;
-            right: 1px;
-            color: gold;
-            font-size: 6px;
-        }
-        .compact-table {
-            font-size: 12px;
-        }
-        .compact-table th, .compact-table td {
-            padding: 2px 5px !important;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    # Header
-    st.markdown('<h1 class="big-font">🎲 BAC BO ANALYZER PRO</h1>', unsafe_allow_html=True)
-    st.markdown("**Análise Inteligente com 5 Algoritmos Avançados**")
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.caption("🧠 IA Avançada")
-    with col2:
-        st.caption("⚡ Análise em Tempo Real")
-    with col3:
-        st.caption("🔄 Padrões Cíclicos")
+    st.title("🎲 Bac Bo Analyzer PRO")
+    st.caption("Sistema avançado de análise de padrões para Bac Bo - v2.0")
 
-    # Input Section
-    st.subheader("🎲 Inserir Resultado")
-    col_player, col_banker, col_button = st.columns([1,1,2])
-    with col_player:
-        player_score = st.number_input("Player (2-12)", min_value=2, max_value=12, step=1, key="player")
-    with col_banker:
-        banker_score = st.number_input("Banker (2-12)", min_value=2, max_value=12, step=1, key="banker")
-    with col_button:
-        st.write("")
-        st.write("")
-        if st.button("Adicionar", type="primary"):
-            add_result(player_score, banker_score)
-    
-    st.caption(f"Total de jogos analisados: {len(st.session_state.results)}")
+    # Atualizar estatísticas
+    st.session_state.current_stats = calculate_basic_stats()
+    perform_advanced_analysis()
 
     # Layout principal
-    col_left, col_right = st.columns([1,2])
+    col1, col2 = st.columns([1, 2])
 
-    with col_left:
-        # Recomendação
-        st.subheader("🎯 Recomendação IA")
+    with col1:
+        st.subheader("📊 Estatísticas Atuais")
+        st.write(f"Total de Jogos: {st.session_state.current_stats['totalGames']}")
+        
+        # Métricas de desempenho
+        st.metric("🤖 Performance IA", "Sistema")  # CORREÇÃO APLICADA AQUI
+        
+        # Botões de entrada
+        with st.form("entry_form"):
+            st.subheader("➕ Adicionar Resultado")
+            p_score = st.selectbox("Player", options=list(range(2, 13)), 
+            b_score = st.selectbox("Banker", options=list(range(2, 13)))
+            
+            if st.form_submit_button("Registrar Resultado"):
+                add_result(p_score, b_score)
+                st.rerun()
+
+    with col2:
+        st.subheader("📈 Análise Avançada")
+        
+        # Exibição de recomendações
         recommendation = get_best_recommendation()
-        
-        # Caixa de recomendação
-        box_class = ""
-        if recommendation['color'] == 'blue':
-            box_class = "blue-box"
-        elif recommendation['color'] == 'red':
-            box_class = "red-box"
-        elif recommendation['color'] == 'green':
-            box_class = "green-box"
-        elif recommendation['color'] == 'gray':
-            box_class = "gray-box"
-        else:
-            box_class = "yellow-box"
+        st.markdown(f"""
+        <div class="recommendation-box" style="border-color: {recommendation['color']};">
+            <h3>🎯 RECOMENDAÇÃO: {recommendation['type']}</h3>
+            <p>Confiança: {recommendation['confidence']}%</p>
+            <p>{recommendation['reason']}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.markdown(f'<div class="recommendation-box {box_class}">', unsafe_allow_html=True)
-        st.markdown(f"**{recommendation['type']}**")
-        st.write(recommendation['reason'])
-        st.write(f"**Confiança:** {recommendation['confidence']}%")
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Histórico de resultados
+        st.subheader("⏱️ Histórico Recente")
+        history_cols = st.columns(10)
+        for i, result in enumerate(st.session_state.results[:10]):
+            with history_cols[i]:
+                st.markdown(f"""
+                <div class="history-item" style="background-color: {result['color']}20; color: {result['color']};">
+                    <div>P: {result['player']}</div>
+                    <div>B: {result['banker']}</div>
+                    <div><b>{result['outcome'][0]}</b></div>
+                </div>
+                """, unsafe_allow_html=True)
 
-        # Nível de risco
-        risk_level = st.session_state.advanced_analysis['riskLevel']
-        risk_color = "🟢" if risk_level == 'LOW' else "🟡" if risk_level == 'MEDIUM' else "🔴"
-        st.metric("📉 Risco", f"{risk_color} {risk_level}")
-        st.metric("📊 Volatilidade", f"{st.session_state.advanced_analysis['volatility']}%")
-
-        # Estatísticas Avançadas
-        st.subheader("📈 Estatísticas Avançadas")
-        stats = st.session_state.current_stats
-        st.metric("🔵 Player", stats['player'])
-        st.metric("🔴 Banker", stats['banker'])
-        st.metric("🟢 Tie", stats['tie'])
-
-        # Momentum
-        momentum = st.session_state.advanced_analysis.get('momentum', {})
-        if momentum and isinstance(momentum, dict):
-            direction_icon = "⬆️" if momentum.get('direction') == 'PLAYER' else "⬇️"
-            st.metric("🚀 Momentum", 
-                     f"{direction_icon} {momentum.get('direction', 'N/A')}",
-                     f"Força: {round(momentum.get('strength', 0)*100)}%")
-
-        # Sequência atual
-        patterns = st.session_state.advanced_analysis.get('patterns', {})
-        streaks = patterns.get('streaks', {})
-        current_streak = streaks.get('currentStreak', {})
-        if current_streak.get('count', 0) > 1:
-            streak_type = "🔵 Player" if current_streak['type'] == 'player' else \
-                         "🔴 Banker" if current_streak['type'] == 'banker' else "🟢 Tie"
-            st.metric("🔥 Sequência Atual", 
-                     f"{current_streak['count']} jogos", 
-                     streak_type)
-
-    with col_right:
-        # Análise Multi-Algoritmo
-        st.subheader("🤖 Análise Multi-Algoritmo")
-        predictions = st.session_state.advanced_analysis.get('predictions', [])
-        
-        if predictions:
-            cols = st.columns(2)
-            for i, pred in enumerate(predictions[:4]):
-                with cols[i % 2]:
-                    with st.container(border=True):
-                        st.caption(pred['algorithm'])
-                        st.subheader(pred['type'])
-                        st.progress(pred['confidence']/100, text=f"{pred['confidence']}%")
-                        st.caption(pred['reason'])
-        else:
-            st.info("Coletando dados para análise...")
-
-        # Histórico de Resultados ATUALIZADO
-        st.subheader("🕒 Histórico de Resultados")
-        if st.session_state.results:
-            # Roadmap compacto
-            st.markdown('<div class="grid-container">', unsafe_allow_html=True)
-            for i, result in enumerate(st.session_state.results[:80]):  # Mostrar mais resultados
-                rare_class = " rare" if result['surprise'] > 80 else ""
-                st.markdown(
-                    f'<div class="grid-item{rare_class}" style="background-color: {result["color"]}" title="Jogo: {result["gameNumber"]} | Player: {result["player"]} | Banker: {result["banker"]} | Surpresa: {result["surprise"]}%">'
-                    f'{result["player"]}|{result["banker"]}'
-                    '</div>', 
-                    unsafe_allow_html=True
-                )
-            st.markdown('</div>', unsafe_allow_html=True)
-
-            # Tabela detalhada compacta
-            with st.expander("📋 Ver últimos 15 resultados detalhados", expanded=False):
-                recent = st.session_state.results[:15]
-                table_data = []
-                for result in recent:
-                    table_data.append({
-                        '#': result['gameNumber'],
-                        'Hora': result['timestamp'],
-                        'Player': result['player'],
-                        'Banker': result['banker'],
-                        'Resultado': result['outcome'],
-                        'Surpresa': f"{result['surprise']}%"
-                    })
-                
-                # Usando uma tabela mais compacta
-                st.dataframe(
-                    pd.DataFrame(table_data),
-                    height=300,
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        "#": st.column_config.NumberColumn(width="small"),
-                        "Hora": st.column_config.TextColumn(width="small"),
-                        "Player": st.column_config.NumberColumn(width="small"),
-                        "Banker": st.column_config.NumberColumn(width="small"),
-                        "Resultado": st.column_config.TextColumn(width="small"),
-                        "Surpresa": st.column_config.TextColumn(width="small")
-                    }
-                )
-        else:
-            st.info("Nenhum resultado inserido ainda")
-
-    # Seções avançadas
-    if st.session_state.results and len(st.session_state.results) > 10:
-        st.divider()
-        st.subheader("🔍 Análise Avançada")
-        
-        cols = st.columns(4)
-        with cols[0]:
-            st.metric("🎰 Padrões", "Detecção")
-            streaks = st.session_state.advanced_analysis['patterns'].get('streaks', {})
-            if streaks:
-                st.write(f"🔵 Max Player: {streaks['maxStreaks']['player']}")
-                st.write(f"🔴 Max Banker: {streaks['maxStreaks']['banker']}")
-                st.write(f"🔄 Alternância: {round(st.session_state.advanced_analysis['patterns']['alternations'].get('rate', 0)*100)}%")
-        
-        with cols[1]:
-            st.metric("🔥 Números Quentes", "Frequência")
-            hot_cold = st.session_state.advanced_analysis['patterns'].get('hotCold', {})
-            if hot_cold:
-                st.write("🔵 Player:")
-                if hot_cold['player'].get('hot'):
-                    st.write(", ".join(str(i['num']) for i in hot_cold['player']['hot']))
-                st.write("🔴 Banker:")
-                if hot_cold['banker'].get('hot'):
-                    st.write(", ".join(str(i['num']) for i in hot_cold['banker']['hot']))
-        
-        with cols[2]:
-            st.metric("🔄 Ciclos", "Padrões")
-            cycle5 = st.session_state.advanced_analysis['cyclicalTrends'].get('cycle5', {})
-            if cycle5:
-                st.write(f"Fase: {cycle5.get('currentPhase', 0)+1}/5")
-                pred = cycle5.get('predictedNext', {})
-                if pred:
-                    st.write(f"Próximo: {pred.get('dominant', 'N/A')}")
-                    st.write(f"Conf: {round(pred.get('strength', 0) * 100)}%")
-        
-        with cols[3]:
-            st.m metric("🤖 Performance IA", "Sistema")
-            st.write(f"Confiança: {round(st.session_state.advanced_analysis['confidence'])}%")
-            st.write(f"Algoritmos: {len(st.session_state.advanced_analysis['predictions'])}")
-            st.write(f"Dados: {len(st.session_state.results)}")
-            status = "🟢 ALTA" if st.session_state.advanced_analysis['confidence'] >= 70 else \
-                     "🟡 MÉDIA" if st.session_state.advanced_analysis['confidence'] >= 50 else "🔴 BAIXA"
-            st.write(status)
-
-    # Footer
+    # Seção de análise detalhada
     st.divider()
-    st.caption("Sistema de análise avançada com 5 algoritmos de IA para Bac Bo Live")
-    st.caption("Baseado em análise estatística, padrões cíclicos e probabilidades matemáticas")
+    st.subheader("🔍 Análise Detalhada")
+    
+    if st.session_state.results:
+        analysis = st.session_state.advanced_analysis
+        a_col1, a_col2, a_col3 = st.columns(3)
+        
+        with a_col1:
+            st.metric("📈 Confiança do Sistema", f"{analysis['confidence']}%")
+            st.metric("⚡ Volatilidade", f"{analysis['volatility']}%")
+            
+        with a_col2:
+            momentum = analysis.get('momentum', {})
+            if momentum:
+                st.metric("📊 Momentum Atual", momentum['direction'])
+                st.metric("💪 Força do Momentum", f"{momentum['strength']*100:.1f}%")
+            
+        with a_col3:
+            st.metric("⚠️ Nível de Risco", analysis['riskLevel'])
+            st.metric("🔄 Padrão de Alternância", 
+                      analysis['patterns']['alternations']['pattern'] if 'patterns' in analysis else "N/A")
 
 if __name__ == "__main__":
     main()
