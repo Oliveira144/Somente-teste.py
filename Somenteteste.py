@@ -46,7 +46,7 @@ def add_result(player_score, banker_score):
     try:
         pScore = int(player_score)
         bScore = int(banker_score)
-    except:
+    except ValueError: # Catch specific ValueError for better error handling
         st.error("Por favor, insira números válidos.")
         return
 
@@ -71,8 +71,8 @@ def add_result(player_score, banker_score):
         'outcome': outcome,
         'color': color,
         'timestamp': datetime.now().strftime("%H:%M:%S"),
-        'playerProb': DICE_PROBABILITIES[pScore],
-        'bankerProb': DICE_PROBABILITIES[bScore],
+        'playerProb': DICE_PROBABILITIES.get(pScore, 0), # Use .get() for safety
+        'bankerProb': DICE_PROBABILITIES.get(bScore, 0), # Use .get() for safety
         'surprise': calculate_surprise(pScore, bScore),
         'gameNumber': len(st.session_state.results) + 1
     }
@@ -107,12 +107,14 @@ def analyze_streaks():
         if current_streak['type'] == outcome:
             current_streak['count'] += 1
         else:
-            if current_streak['type'] and current_streak['count'] > 1:
+            if current_streak['type'] and current_streak['count'] > 0: # Changed to > 0 to include streaks of 1
                 streaks[current_streak['type']].append(current_streak['count'])
             current_streak = {'type': outcome, 'count': 1}
 
-    if current_streak['type'] and current_streak['count'] > 1:
+    # Add the last streak if it exists and has a count > 0
+    if current_streak['type'] and current_streak['count'] > 0:
         streaks[current_streak['type']].append(current_streak['count'])
+
 
     max_streaks = {
         'player': max(streaks['player']) if streaks['player'] else 0,
@@ -129,23 +131,22 @@ def analyze_streaks():
     return {
         'maxStreaks': max_streaks,
         'avgStreaks': avg_streaks,
-        'currentStreak': current_streak
+        'currentStreak': current_streak # This might not be the actual "current streak" if results are reversed
     }
 
 def analyze_alternations():
     results = st.session_state.results
-    if len(results) < 3:
-        return {'rate': 0, 'pattern': 'NONE'}
+    if len(results) < 2: # Need at least 2 results to check for alternation
+        return {'rate': 0, 'pattern': 'NONE', 'alternations': 0, 'consecutives': 0}
 
     alternations = 0
-    consecutives = 0
-
-    for i in range(1, len(results)):
+    
+    # Iterate from the second most recent result to the oldest
+    for i in range(len(results) - 1, 0, -1):
         if results[i]['outcome'] != results[i-1]['outcome']:
             alternations += 1
-        else:
-            consecutives += 1
 
+    consecutives = (len(results) - 1) - alternations
     alternation_rate = alternations / (len(results) - 1)
     pattern = 'HIGH_ALT' if alternation_rate > 0.6 else 'LOW_ALT' if alternation_rate < 0.4 else 'BALANCED'
 
@@ -160,6 +161,8 @@ def analyze_hot_cold_numbers():
 
     def get_hot_cold(freq):
         entries = [{'num': int(k), 'count': v} for k, v in freq.items()]
+        if not entries:
+            return {'hot': [], 'cold': []}
         entries.sort(key=lambda x: x['count'], reverse=True)
         return {
             'hot': entries[:3],
@@ -175,16 +178,25 @@ def analyze_distribution():
     results = st.session_state.results
     n = len(results)
     if n == 0:
-        return {'deviations': {}, 'expected': {}}
+        return {'deviations': {}, 'expected': {'player': 0, 'banker': 0, 'tie': 0}}
     
-    expected_player = n * 0.486
-    expected_banker = n * 0.486
-    expected_tie = n * 0.028
+    # These probabilities are theoretical for a standard Baccarat game.
+    # For Bac Bo, where outcomes are determined by dice, the probabilities
+    # for Player, Banker, Tie are different. This part might need adjustment
+    # if you have specific theoretical probabilities for Player/Banker/Tie in Bac Bo.
+    # Assuming these are just example weights for distribution analysis.
+    expected_player_ratio = 0.486 # Example
+    expected_banker_ratio = 0.486 # Example
+    expected_tie_ratio = 0.028   # Example
+
+    expected_player = n * expected_player_ratio
+    expected_banker = n * expected_banker_ratio
+    expected_tie = n * expected_tie_ratio
 
     stats = st.session_state.current_stats
     deviations = {
-        'player': abs(stats['player'] - expected_player) / expected_player,
-        'banker': abs(stats['banker'] - expected_banker) / expected_banker,
+        'player': abs(stats['player'] - expected_player) / (expected_player or 1),
+        'banker': abs(stats['banker'] - expected_banker) / (expected_banker or 1),
         'tie': abs(stats['tie'] - expected_tie) / (expected_tie or 1)
     }
 
@@ -192,74 +204,98 @@ def analyze_distribution():
 
 def analyze_correlations():
     results = st.session_state.results
-    if len(results) < 10:
-        return {}
+    if len(results) < 2: # Need at least 2 results to correlate current with previous
+        return {'playerNumberCorrelation': 0, 'bankerNumberCorrelation': 0, 'outcomeCorrelation': 0}
     
-    player_corr = 0
-    banker_corr = 0
-    n = min(len(results) - 1, 20)
+    player_corr_sum = 0
+    banker_corr_sum = 0
+    
+    # Correlate recent N results, adjust N based on how far back you want to look
+    n_correlate = min(len(results) - 1, 20) # Look at up to 20 pairs
 
-    for i in range(1, n+1):
-        curr = results[i]
-        prev = results[i-1]
-        player_corr += curr['player'] * prev['player']
-        banker_corr += curr['banker'] * prev['banker']
+    for i in range(1, n_correlate + 1):
+        # results are ordered from newest to oldest.
+        # So results[i] is older than results[i-1]
+        curr_idx = i - 1
+        prev_idx = i
+        
+        # Ensure indices are valid
+        if curr_idx >= 0 and prev_idx < len(results):
+            curr = results[curr_idx]
+            prev = results[prev_idx]
+            player_corr_sum += curr['player'] * prev['player']
+            banker_corr_sum += curr['banker'] * prev['banker']
+
+    player_corr = player_corr_sum / n_correlate if n_correlate > 0 else 0
+    banker_corr = banker_corr_sum / n_correlate if n_correlate > 0 else 0
 
     return {
-        'playerNumberCorrelation': player_corr / n,
-        'bankerNumberCorrelation': banker_corr / n,
+        'playerNumberCorrelation': player_corr,
+        'bankerNumberCorrelation': banker_corr,
         'outcomeCorrelation': analyze_outcome_correlation()
     }
 
 def analyze_outcome_correlation():
     results = st.session_state.results
-    if len(results) < 6:
+    if len(results) < 4: # Need at least 4 results for a 3-game lag correlation
         return 0
 
     matches = 0
-    n = min(len(results) - 3, 12)
+    # Look at correlation with a 3-game lag for the most recent 10 such comparisons
+    n_lag_check = min(len(results) - 3, 10) 
 
-    for i in range(3, 3+n):
+    for i in range(3, 3 + n_lag_check):
+        # results are newest to oldest, so results[i] is older than results[i-3]
         if results[i]['outcome'] == results[i-3]['outcome']:
             matches += 1
 
-    return matches / n
+    return matches / n_lag_check if n_lag_check > 0 else 0
 
 def analyze_sequences():
     results = st.session_state.results
+    if len(results) < 2: # Need at least 2 results to form a sequence
+        return {'sequences': {}, 'topSequences': []}
+
     sequences = defaultdict(int)
     
-    for length in range(2, 5):
-        for i in range(len(results) - length + 1):
-            seq = '-'.join(r['outcome'] for r in results[i:i+length])
+    # Iterate through results from oldest to newest to build sequences in chronological order
+    # (assuming results are stored newest-first, we need to reverse for sequence building)
+    chronological_results = results[::-1] 
+
+    for length in range(2, min(5, len(chronological_results) + 1)): # Max length 4 or num results
+        for i in range(len(chronological_results) - length + 1):
+            seq = '-'.join(r['outcome'] for r in chronological_results[i:i+length])
             sequences[seq] += 1
 
     top_sequences = sorted([(seq, count) for seq, count in sequences.items()], 
                           key=lambda x: x[1], reverse=True)[:5]
     
-    top_sequences = [{
+    top_sequences_formatted = [{
         'sequence': seq,
         'count': count,
-        'probability': count / len(results)
+        'probability': count / len(chronological_results) if len(chronological_results) > 0 else 0
     } for seq, count in top_sequences]
 
-    return {'sequences': sequences, 'topSequences': top_sequences}
+    return {'sequences': sequences, 'topSequences': top_sequences_formatted}
 
 def analyze_cyclical_trends():
     results = st.session_state.results
-    if len(results) < 12:
+    if len(results) < 12: # More data needed for meaningful cycles
         return {}
 
     cycles = [3, 5, 7, 10]
     cyclical_data = {}
 
+    # Iterate through results from oldest to newest for cyclical analysis
+    chronological_results = results[::-1] 
+
     for cycle in cycles:
         buckets = [{'player': 0, 'banker': 0, 'tie': 0} for _ in range(cycle)]
         
-        for i, result in enumerate(results):
-            bucket = i % cycle
+        for i, result in enumerate(chronological_results):
+            bucket_idx = i % cycle
             outcome = result['outcome'].lower()
-            buckets[bucket][outcome] += 1
+            buckets[bucket_idx][outcome] += 1
 
         dominant_phases = []
         for phase, bucket in enumerate(buckets):
@@ -278,21 +314,24 @@ def analyze_cyclical_trends():
                 
             dominant_phases.append({'phase': phase, 'dominant': dominant, 'strength': max_val / total})
 
+        current_phase_idx = len(chronological_results) % cycle
+        predicted_next_phase = dominant_phases[current_phase_idx] if dominant_phases else None
+
         cyclical_data[f'cycle{cycle}'] = {
             'buckets': buckets,
             'dominantPhases': dominant_phases,
-            'currentPhase': len(results) % cycle,
-            'predictedNext': dominant_phases[len(results) % cycle] if dominant_phases else None
+            'currentPhase': current_phase_idx,
+            'predictedNext': predicted_next_phase
         }
 
     return cyclical_data
 
 def calculate_volatility():
     results = st.session_state.results
-    if len(results) < 10:
+    if len(results) < 2: # Need at least 2 results to calculate changes
         return 0
 
-    recent = results[:20]
+    recent = results[:20] # Consider up to 20 most recent
     changes = 0
     total_surprise = 0
 
@@ -301,7 +340,7 @@ def calculate_volatility():
             changes += 1
         total_surprise += recent[i]['surprise']
 
-    change_rate = changes / (len(recent) - 1)
+    change_rate = changes / (len(recent) - 1) if len(recent) > 1 else 0
     avg_surprise = total_surprise / len(recent) if recent else 0
     volatility = min(100, (change_rate * 50) + (avg_surprise * 0.5))
     
@@ -310,23 +349,33 @@ def calculate_volatility():
 def calculate_momentum():
     results = st.session_state.results
     if len(results) < 8:
-        return 0
+        # Return a default dictionary structure if not enough data
+        return {
+            'direction': 'N/A',
+            'strength': 0,
+            'playerMomentum': 0,
+            'bankerMomentum': 0
+        }
 
-    recent = results[:8]
-    weights = [0.4, 0.3, 0.15, 0.08, 0.04, 0.02, 0.01, 0.005]
+    recent = results[:8] # Consider 8 most recent results
+    # These weights sum up to close to 1, giving more importance to recent games
+    weights = [0.4, 0.3, 0.15, 0.08, 0.04, 0.02, 0.01, 0.005] 
     
     player_momentum = 0
     banker_momentum = 0
 
     for i, result in enumerate(recent):
-        weight = weights[i]
-        if result['outcome'] == 'PLAYER':
-            player_momentum += weight
-        elif result['outcome'] == 'BANKER':
-            banker_momentum += weight
+        if i < len(weights): # Ensure we don't go out of bounds for weights
+            weight = weights[i]
+            if result['outcome'] == 'PLAYER':
+                player_momentum += weight
+            elif result['outcome'] == 'BANKER':
+                banker_momentum += weight
 
     strength = abs(player_momentum - banker_momentum)
     direction = 'PLAYER' if player_momentum > banker_momentum else 'BANKER'
+    if player_momentum == banker_momentum:
+        direction = 'TIE/BALANCED'
 
     return {
         'direction': direction,
@@ -360,26 +409,39 @@ def generate_reversion_prediction():
     if len(results) < 5:
         return {'type': 'WAIT', 'confidence': 0, 'reason': 'Dados insuficientes', 'algorithm': 'REVERSION'}
 
-    recent = results[:5]
-    last_outcome = recent[0]['outcome']
-    same_count = sum(1 for r in recent if r['outcome'] == last_outcome)
+    recent = results[:5] # Check the 5 most recent games
+    
+    # Ensure there's at least one result to get the last outcome
+    if not recent:
+        return {'type': 'WAIT', 'confidence': 0, 'reason': 'Dados insuficientes', 'algorithm': 'REVERSION'}
 
-    if same_count >= 4:
-        opposite = 'BANKER' if last_outcome == 'PLAYER' else 'PLAYER'
-        confidence = min(85, 45 + (same_count * 10))
+    last_outcome = recent[0]['outcome']
+    
+    # Count consecutive outcomes starting from the most recent
+    consecutive_count = 0
+    for r in recent:
+        if r['outcome'] == last_outcome:
+            consecutive_count += 1
+        else:
+            break # Stop counting if the streak breaks
+
+    if consecutive_count >= 4:
+        opposite = 'BANKER' if last_outcome == 'PLAYER' else 'PLAYER' if last_outcome == 'BANKER' else 'TIE'
+        # Confidence increases with longer streaks, up to 85%
+        confidence = min(85, 45 + (consecutive_count * 10)) 
         return {
             'type': opposite,
             'confidence': confidence,
-            'reason': f'Reversão após {same_count} {last_outcome}s consecutivos',
+            'reason': f'Forte tendência de reversão após {consecutive_count} {last_outcome}s consecutivos.',
             'algorithm': 'REVERSION'
         }
 
-    if same_count >= 3:
-        opposite = 'BANKER' if last_outcome == 'PLAYER' else 'PLAYER'
+    if consecutive_count >= 3:
+        opposite = 'BANKER' if last_outcome == 'PLAYER' else 'PLAYER' if last_outcome == 'BANKER' else 'TIE'
         return {
             'type': opposite,
             'confidence': 60,
-            'reason': f'Provável reversão após {same_count} {last_outcome}s',
+            'reason': f'Provável reversão após {consecutive_count} {last_outcome}s.',
             'algorithm': 'REVERSION'
         }
 
@@ -387,41 +449,51 @@ def generate_reversion_prediction():
 
 def generate_momentum_prediction():
     momentum = st.session_state.advanced_analysis.get('momentum', {})
-    if not momentum or not isinstance(momentum, dict):
-        return {'type': 'WAIT', 'confidence': 0, 'reason': 'Momentum indisponível', 'algorithm': 'MOMENTUM'}
+    if not momentum or momentum.get('direction') == 'N/A' or momentum.get('strength', 0) == 0:
+        return {'type': 'WAIT', 'confidence': 0, 'reason': 'Momentum indisponível ou fraco', 'algorithm': 'MOMENTUM'}
     
-    if momentum.get('strength', 0) > 0.3:
+    # High momentum strength for a direct prediction
+    if momentum.get('strength', 0) > 0.4: # Adjusted threshold for stronger signal
         return {
             'type': momentum['direction'],
-            'confidence': min(75, 40 + (momentum['strength'] * 100)),
-            'reason': f'Momentum forte para {momentum["direction"]}',
+            'confidence': min(75, 40 + int(momentum['strength'] * 100)),
+            'reason': f'Momento forte para {momentum["direction"]}',
+            'algorithm': 'MOMENTUM'
+        }
+    # Moderate momentum strength for a leaning prediction
+    elif momentum.get('strength', 0) > 0.2:
+        return {
+            'type': momentum['direction'],
+            'confidence': min(60, 30 + int(momentum['strength'] * 100)),
+            'reason': f'Momento moderado para {momentum["direction"]}',
             'algorithm': 'MOMENTUM'
         }
 
     return {
         'type': 'BALANCED',
         'confidence': 35,
-        'reason': 'Momentum equilibrado',
+        'reason': 'Momento equilibrado',
         'algorithm': 'MOMENTUM'
     }
 
+
 def generate_cyclical_prediction():
     cyclical_trends = st.session_state.advanced_analysis.get('cyclicalTrends', {})
-    cycle5 = cyclical_trends.get('cycle5', {})
-    prediction = cycle5.get('predictedNext', {})
+    cycle5_data = cyclical_trends.get('cycle5', {}) # Use cycle5 for prediction
+    predicted_next_phase = cycle5_data.get('predictedNext', {})
     
-    if not prediction or prediction.get('strength', 0) <= 0.4:
+    if not predicted_next_phase or predicted_next_phase.get('strength', 0) <= 0.5: # Adjusted strength threshold
         return {
             'type': 'RANDOM',
             'confidence': 30,
-            'reason': 'Sem padrão cíclico claro',
+            'reason': 'Sem padrão cíclico claro ou fraco',
             'algorithm': 'CYCLICAL'
         }
     
     return {
-        'type': prediction['dominant'],
-        'confidence': min(70, 30 + (prediction['strength'] * 50)),
-        'reason': f'Padrão cíclico indica {prediction["dominant"]}',
+        'type': predicted_next_phase['dominant'],
+        'confidence': min(70, 30 + int(predicted_next_phase['strength'] * 50)),
+        'reason': f'Padrão cíclico (ciclo 5) indica {predicted_next_phase["dominant"]}',
         'algorithm': 'CYCLICAL'
     }
 
@@ -431,49 +503,60 @@ def generate_distribution_prediction():
     deviations = distribution.get('deviations', {})
     stats = st.session_state.current_stats
     
-    if deviations.get('player', 0) > 0.2 and stats['player'] < stats['banker']:
+    # Check if player is significantly below expected and recommend player
+    if stats['totalGames'] > 10 and deviations.get('player', 0) > 0.2 and \
+       (stats['player'] / stats['totalGames'] < (distribution['expected']['player'] / stats['totalGames'] if stats['totalGames'] > 0 else 0) * 0.8):
         return {
             'type': 'PLAYER',
-            'confidence': min(80, 50 + (deviations['player'] * 100)),
-            'reason': 'Player abaixo da distribuição esperada',
+            'confidence': min(80, 50 + int(deviations['player'] * 100)),
+            'reason': 'Player significativamente abaixo da distribuição esperada',
             'algorithm': 'DISTRIBUTION'
         }
     
-    if deviations.get('banker', 0) > 0.2 and stats['banker'] < stats['player']:
+    # Check if banker is significantly below expected and recommend banker
+    if stats['totalGames'] > 10 and deviations.get('banker', 0) > 0.2 and \
+       (stats['banker'] / stats['totalGames'] < (distribution['expected']['banker'] / stats['totalGames'] if stats['totalGames'] > 0 else 0) * 0.8):
         return {
             'type': 'BANKER',
-            'confidence': min(80, 50 + (deviations['banker'] * 100)),
-            'reason': 'Banker abaixo da distribuição esperada',
+            'confidence': min(80, 50 + int(deviations['banker'] * 100)),
+            'reason': 'Banker significativamente abaixo da distribuição esperada',
             'algorithm': 'DISTRIBUTION'
         }
     
     return {
         'type': 'BALANCED',
         'confidence': 40,
-        'reason': 'Distribuição próxima do esperado',
+        'reason': 'Distribuição próxima do esperado ou dados insuficientes para desvio significativo',
         'algorithm': 'DISTRIBUTION'
     }
 
 def generate_pattern_prediction():
     patterns = st.session_state.advanced_analysis.get('patterns', {})
-    sequences = patterns.get('sequences', {})
-    top_sequences = sequences.get('topSequences', [])
+    sequences_analysis = patterns.get('sequences', {})
+    top_sequences = sequences_analysis.get('topSequences', [])
     
-    if not top_sequences or top_sequences[0]['probability'] <= 0.15:
+    if not top_sequences or top_sequences[0]['probability'] <= 0.20: # Higher threshold for strong pattern
         return {
             'type': 'RANDOM',
             'confidence': 25,
-            'reason': 'Sem padrão sequencial forte',
+            'reason': 'Sem padrão sequencial forte o suficiente',
             'algorithm': 'PATTERN'
         }
     
-    sequence_parts = top_sequences[0]['sequence'].split('-')
-    next_expected = sequence_parts[-1]
-    
+    # Predict the next element in the most frequent sequence
+    most_frequent_seq = top_sequences[0]['sequence']
+    sequence_parts = most_frequent_seq.split('-')
+    next_expected = sequence_parts[-1] # The last element of the most frequent sequence
+
+    # You could add logic here to predict based on the *next* expected outcome
+    # if the sequence is 'P-P-B', and current is 'P-P', then predict 'B'
+    # This requires more complex sequence matching to the *end* of the results list.
+    # For now, this simply predicts the last element of the most frequent sequence found anywhere.
+
     return {
         'type': next_expected,
-        'confidence': min(65, 35 + (top_sequences[0]['probability'] * 100)),
-        'reason': f'Padrão sequencial indica {next_expected}',
+        'confidence': min(65, 35 + int(top_sequences[0]['probability'] * 100)),
+        'reason': f'Padrão sequencial comum: "{most_frequent_seq}"',
         'algorithm': 'PATTERN'
     }
 
@@ -486,6 +569,7 @@ def calculate_overall_confidence(analysis):
     if not predictions:
         return 30
 
+    # Weights adjusted for perceived importance
     weights = {
         'REVERSION': 0.25,
         'MOMENTUM': 0.20,
@@ -498,14 +582,16 @@ def calculate_overall_confidence(analysis):
     total_weight = 0
 
     for pred in predictions:
-        weight = weights.get(pred['algorithm'], 0.1)
+        weight = weights.get(pred['algorithm'], 0) # Use 0 if algorithm not in weights
         weighted_confidence += pred['confidence'] * weight
         total_weight += weight
 
     base_confidence = weighted_confidence / total_weight if total_weight > 0 else 30
-    data_quality_multiplier = min(1.2, 0.8 + (len(results) * 0.01))
-    volatility_adjustment = 0.9 if analysis['volatility'] > 70 else 1.1
     
+    # Multipliers for data quality and volatility
+    data_quality_multiplier = min(1.2, 0.8 + (len(results) * 0.01)) # More data, higher quality
+    volatility_adjustment = 0.9 if analysis['volatility'] > 70 else 1.1 if analysis['volatility'] < 30 else 1 # High volatility reduces confidence
+
     confidence = min(95, max(25, base_confidence * data_quality_multiplier * volatility_adjustment))
     return round(confidence)
 
@@ -513,9 +599,9 @@ def determine_risk_level(analysis):
     volatility = analysis['volatility']
     confidence = analysis['confidence']
 
-    if volatility > 80 or confidence < 40:
+    if volatility > 75 or confidence < 45: # Higher thresholds for HIGH risk
         return 'HIGH'
-    if volatility > 60 or confidence < 55:
+    if volatility > 55 or confidence < 60: # Medium thresholds
         return 'MEDIUM'
     return 'LOW'
 
@@ -524,18 +610,21 @@ def get_best_recommendation():
     if len(results) < 3:
         return {
             'type': 'AGUARDAR',
-            'reason': 'Coletando dados iniciais...',
+            'reason': 'Coletando dados iniciais para análise...',
             'confidence': 0,
             'color': 'gray',
             'algorithm': 'NONE'
         }
 
     predictions = st.session_state.advanced_analysis.get('predictions', [])
+    
+    # If no strong predictions, use a default Player recommendation (common in Baccarat due to no commission)
+    # This might need adjustment for Bac Bo if Banker is truly better odds.
     if not predictions:
         return {
             'type': 'PLAYER',
-            'reason': 'Recomendação padrão (sem comissão)',
-            'confidence': 52,
+            'reason': 'Nenhuma previsão forte no momento, recomendação padrão (sem comissão)',
+            'confidence': 50, # Neutral confidence
             'color': '#4285F4',
             'algorithm': 'DEFAULT'
         }
@@ -543,35 +632,38 @@ def get_best_recommendation():
     consensus_map = {}
     for pred in predictions:
         pred_type = pred['type']
-        if pred_type not in ['WAIT', 'RANDOM', 'BALANCED']:
+        # Only consider actionable predictions with sufficient confidence
+        if pred_type not in ['WAIT', 'RANDOM', 'BALANCED'] and pred['confidence'] > 50: # Only consider confident predictions
             consensus_map[pred_type] = consensus_map.get(pred_type, 0) + pred['confidence']
 
     if not consensus_map:
         return {
             'type': 'AGUARDAR',
-            'reason': 'Sinais conflitantes - aguardar melhor oportunidade',
+            'reason': 'Sinais conflitantes ou fracos - aguardar melhor oportunidade',
             'confidence': 35,
             'color': 'yellow',
             'algorithm': 'CONSENSUS'
         }
 
-    best_consensus = max(consensus_map.items(), key=lambda x: x[1])
-    recommended_type, total_confidence = best_consensus
+    # Get the outcome with the highest combined confidence
+    best_consensus_type, total_consensus_confidence = max(consensus_map.items(), key=lambda x: x[1])
     
-    supporting = sum(1 for p in predictions if p['type'] == recommended_type)
-    avg_confidence = min(90, total_confidence / supporting) if supporting else 0
+    # Calculate average confidence for the best type
+    supporting_algos = sum(1 for p in predictions if p['type'] == best_consensus_type and p['confidence'] > 50)
+    avg_confidence = min(95, total_consensus_confidence / supporting_algos) if supporting_algos else 0
 
     return {
-        'type': recommended_type,
-        'reason': f'Consenso de {supporting} algoritmo(s)',
+        'type': best_consensus_type,
+        'reason': f'Consenso de {supporting_algos} algoritmo(s) para {best_consensus_type}',
         'confidence': round(avg_confidence),
-        'color': '#4285F4' if recommended_type == 'PLAYER' else '#EA4335' if recommended_type == 'BANKER' else '#34A853' if recommended_type == 'TIE' else 'yellow',
+        'color': '#4285F4' if best_consensus_type == 'PLAYER' else '#EA4335' if best_consensus_type == 'BANKER' else '#34A853' if best_consensus_type == 'TIE' else 'yellow',
         'algorithm': 'CONSENSUS',
-        'supportingAlgorithms': supporting
+        'supportingAlgorithms': supporting_algos
     }
 
 def analyze_patterns():
-    if len(st.session_state.results) < 5:
+    # Only calculate patterns if there's enough data
+    if len(st.session_state.results) < 2:
         return {}
     
     patterns = {
@@ -588,6 +680,15 @@ def analyze_patterns():
 def perform_advanced_analysis():
     if not st.session_state.results:
         st.session_state.current_stats = {'player':0, 'banker':0, 'tie':0, 'totalGames':0}
+        st.session_state.advanced_analysis = { # Reset advanced analysis if no results
+            'patterns': {},
+            'predictions': [],
+            'confidence': 0,
+            'volatility': 0,
+            'momentum': {'direction': 'N/A', 'strength': 0, 'playerMomentum': 0, 'bankerMomentum': 0}, # Ensure momentum is a dict
+            'cyclicalTrends': {},
+            'riskLevel': 'LOW'
+        }
         return
 
     stats = calculate_basic_stats()
@@ -597,7 +698,7 @@ def perform_advanced_analysis():
         'patterns': analyze_patterns(),
         'cyclicalTrends': analyze_cyclical_trends(),
         'volatility': calculate_volatility(),
-        'momentum': calculate_momentum(),
+        'momentum': calculate_momentum(), # This now always returns a dict
         'predictions': generate_predictions(),
         'confidence': 0,
         'riskLevel': 'LOW'
