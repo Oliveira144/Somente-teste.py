@@ -608,11 +608,11 @@ def perform_advanced_analysis():
 
     st.session_state.advanced_analysis = analysis
 
-# Interface do usuário completa com histórico simplificado
+# Interface do usuário completa com histórico em grade de 6 colunas
 def main():
     st.set_page_config(layout="wide", page_title="Bac Bo Analyzer PRO")
     
-    # CSS personalizado minimalista
+    # CSS personalizado
     st.markdown("""
     <style>
         .recommendation-box {
@@ -625,35 +625,36 @@ def main():
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         
-        .history-item {
-            padding: 15px;
-            margin: 10px 0;
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .history-cell {
+            text-align: center;
+            padding: 15px 5px;
             border-radius: 8px;
-            background-color: #0e1117;
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
+            background-color: #0e1117;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        .player-item {
+        .player-cell {
             color: #4cc9f0;
-            border-left: 5px solid #4cc9f0;
+            border: 3px solid #4cc9f0;
         }
         
-        .banker-item {
+        .banker-cell {
             color: #f72585;
-            border-left: 5px solid #f72585;
+            border: 3px solid #f72585;
         }
         
-        .tie-item {
+        .tie-cell {
             color: #2ec4b6;
-            border-left: 5px solid #2ec4b6;
-        }
-        
-        .timestamp {
-            font-size: 14px;
-            color: #aaa;
-            margin-top: 5px;
-            font-weight: normal;
+            border: 3px solid #2ec4b6;
         }
         
         .input-container {
@@ -681,6 +682,14 @@ def main():
             font-size: 24px;
             font-weight: bold;
         }
+        
+        .stat-card {
+            background-color: #1e2130;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4a4e69;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -699,7 +708,12 @@ def main():
         st.write(f"Total de Jogos: {st.session_state.current_stats['totalGames']}")
         
         # Métricas de desempenho
-        st.metric("🤖 Performance IA", "Sistema")
+        st.markdown("""
+        <div class="stat-card">
+            <div style="font-size: 14px; color: #aaa;">🤖 Performance IA</div>
+            <div style="font-size: 24px; font-weight: bold;">Sistema</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Botões de entrada
         with st.form("entry_form"):
@@ -746,31 +760,34 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        # Histórico de resultados - Formato simplificado
+        # Histórico de resultados - Formato de grade (6 por linha)
         st.subheader("⏱️ Histórico Recente")
         
         if not st.session_state.results:
             st.info("Nenhum resultado registrado ainda")
         else:
-            # Exibir os últimos 10 resultados no formato simples
-            for result in st.session_state.results[:10]:
-                # Determinar a classe CSS baseada no resultado
-                if result['outcome'] == 'PLAYER':
-                    css_class = "player-item"
-                    prefix = "PLAYER"
-                elif result['outcome'] == 'BANKER':
-                    css_class = "banker-item"
-                    prefix = "BANKER"
-                else:
-                    css_class = "tie-item"
-                    prefix = "EMPATE"
+            # Agrupar resultados em linhas de 6
+            results_to_display = st.session_state.results[:18]  # Mostrar até 18 resultados (3 linhas)
+            rows = [results_to_display[i:i+6] for i in range(0, len(results_to_display), 6)]
+            
+            for row in rows:
+                st.markdown('<div class="history-grid">', unsafe_allow_html=True)
                 
-                st.markdown(f"""
-                <div class="history-item {css_class}">
-                    {prefix} {result['player']} - {result['banker']}
-                    <div class="timestamp">{result['timestamp']}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                for result in row:
+                    # Determinar a classe CSS baseada no resultado
+                    if result['outcome'] == 'PLAYER':
+                        css_class = "player-cell"
+                    elif result['outcome'] == 'BANKER':
+                        css_class = "banker-cell"
+                    else:
+                        css_class = "tie-cell"
+                    
+                    st.markdown(
+                        f'<div class="history-cell {css_class}">{result["player"]}-{result["banker"]}</div>',
+                        unsafe_allow_html=True
+                    )
+                
+                st.markdown('</div>', unsafe_allow_html=True)
 
     # Seção de análise detalhada
     st.divider()
