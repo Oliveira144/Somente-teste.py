@@ -564,7 +564,7 @@ def determine_risk_level(analysis):
     return 'LOW'
 
 def get_best_recommendation():
-    results = st.session_state.results
+    results = st.session_session.results
     if len(results) < 3:
         return {
             'type': 'AGUARDAR',
@@ -664,11 +664,21 @@ def perform_advanced_analysis():
 # Interface do usuário com histórico compacto
 def main():
     st.set_page_config(layout="wide", page_title="Bac Bo Analyzer PRO")
-    
-    # CSS personalizado para o layout em linha de 6 resultados
-    st.markdown("""
+
+    # Injeção de CSS e HTML do cabeçalho e histórico usando st.html
+    # Isso garante que o CSS esteja diretamente associado e tenha alta especificidade
+    history_items_html = ""
+    for result in st.session_state.results: 
+        history_items_html += f"""
+        <div class="history-item" style="background-color: {result['color']};">
+            <div class="score-display player-score">{result['player']}</div>
+            <div class="score-display banker-score">{result['banker']}</div>
+        </div>
+        """
+
+    st.html(f"""
     <style>
-        .recommendation-box {
+        .recommendation-box {{
             padding: 15px;
             border-radius: 8px;
             text-align: center;
@@ -676,25 +686,21 @@ def main():
             background-color: #1e2130;
             border: 2px solid #4a4e69;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
+        }}
         
-        .history-grid {
+        .history-grid {{
             display: flex;
-            flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
-            gap: 8px; /* Espaço entre os itens */
+            flex-wrap: wrap;
+            gap: 8px;
             padding: 10px 0;
-            justify-content: flex-start; /* Alinha os itens ao início */
-            width: 100%; /* Garante que o container use a largura total para a quebra */
-        }
-        .history-item {
-            /* 100% dividido por 6 itens, subtraindo o gap, para ter 6 por linha */
+            justify-content: flex-start;
+            width: 100%;
+        }}
+        .history-item {{
             width: calc((100% / 6) - 8px); 
-            /* Se a tela for muito estreita e calc() não for suficiente, 
-               pode-se adicionar um min-width para evitar que fiquem minúsculos 
-               ou um max-width para telas muito largas. */
-            min-width: 50px; /* Garante um tamanho mínimo para visualização em telas pequenas */
-            max-width: 60px; /* Limite máximo para o item, ajuste conforme necessário */
-            height: 60px; /* Altura do item */
+            min-width: 50px; 
+            max-width: 60px; 
+            height: 60px;
             border-radius: 8px;
             display: flex;
             flex-direction: column;
@@ -705,92 +711,82 @@ def main():
             color: white;
             padding: 2px;
             box-sizing: border-box;
-            flex-shrink: 0; /* Evita que os itens encolham abaixo do seu tamanho calculado */
-        }
-        .score-display {
+            flex-shrink: 0;
+        }}
+        .score-display {{
             font-size: 0.9em;
             line-height: 1.2;
-        }
-        .player-score {
+        }}
+        .player-score {{
             color: white;
-        }
-        .banker-score {
+        }}
+        .banker-score {{
             color: white;
-        }
-        .header-section {
+        }}
+        .header-section {{
             background-color: #1e2130;
             padding: 10px;
             border-radius: 8px;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
-        }
-        .header-section h3 {
+        }}
+        .header-section h3 {{
             margin: 0;
             color: #fff;
             margin-left: 10px;
-        }
-        .stButton>button {
+        }}
+        /* Estilos específicos para o Streamlit (input, buttons, metrics) */
+        /* Esses estilos são menos críticos para o layout do histórico, mas mantidos para a aparência geral */
+        .stButton>button {{
             width: 100%;
             border-radius: 8px;
             height: 50px;
             font-size: 1.1em;
             font-weight: bold;
-        }
-        .stTextInput>div>div>input {
+        }}
+        .stTextInput>div>div>input {{
             border-radius: 8px;
             height: 50px;
             font-size: 1.1em;
             text-align: center;
-        }
-        .stMetric {
+        }}
+        .stMetric {{
             background-color: #1e2130;
             border-radius: 8px;
             padding: 10px;
             text-align: center;
             color: #fff;
             border: 1px solid #4a4e69;
-        }
-        .stMetric > div > div > div > div > div {
+        }}
+        .stMetric > div > div > div > div > div {{
             color: #fff !important;
-        }
-        .stMetric > div > div > div {
+        }}
+        .stMetric > div > div > div {{
             color: #fff !important;
-        }
-        .stProgress > div > div > div > div {
+        }}
+        .stProgress > div > div > div > div {{
             background-color: #4CAF50;
-        }
-        h1, h2, h3, h4, h5, h6 {
+        }}
+        h1, h2, h3, h4, h5, h6 {{
             color: #fff;
-        }
-        p {
+        }}
+        p {{
             color: #ccc;
-        }
-        .stAlert {
+        }}
+        .stAlert {{
             border-radius: 8px;
-        }
+        }}
     </style>
-    """, unsafe_allow_html=True)
 
-    # Header Section
-    st.markdown("""
-        <div class="header-section">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bar-chart-2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-            <h3>Historico de Resultados</h3>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # History Display
-    st.markdown('<div class="history-grid">', unsafe_allow_html=True)
-    # Exibe todos os resultados (até 100)
-    for result in st.session_state.results: 
-        st.markdown(f"""
-        <div class="history-item" style="background-color: {result['color']};">
-            <div class="score-display player-score">{result['player']}</div>
-            <div class="score-display banker-score">{result['banker']}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    <div class="header-section">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bar-chart-2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <h3>Historico de Resultados</h3>
+    </div>
+    <div class="history-grid">
+        {history_items_html}
+    </div>
+    """)
 
     st.markdown("---")
 
