@@ -608,7 +608,7 @@ def perform_advanced_analysis():
 
     st.session_state.advanced_analysis = analysis
 
-# Interface do usuário completa com histórico em grade de 6 colunas
+# Interface do usuário com histórico em grade de 6 colunas
 def main():
     st.set_page_config(layout="wide", page_title="Bac Bo Analyzer PRO")
     
@@ -625,34 +625,37 @@ def main():
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         
-        .history-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
+        .history-row {
+            display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         
-        .history-cell {
-            text-align: center;
-            padding: 15px 5px;
+        .history-item {
+            min-width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 8px;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             background-color: #0e1117;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            flex: 1;
         }
         
-        .player-cell {
+        .player-item {
             color: #4cc9f0;
             border: 3px solid #4cc9f0;
         }
         
-        .banker-cell {
+        .banker-item {
             color: #f72585;
             border: 3px solid #f72585;
         }
         
-        .tie-cell {
+        .tie-item {
             color: #2ec4b6;
             border: 3px solid #2ec4b6;
         }
@@ -689,6 +692,13 @@ def main():
             padding: 15px;
             margin-bottom: 15px;
             border-left: 4px solid #4a4e69;
+        }
+        
+        .history-title {
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #f8f9fa;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -760,30 +770,37 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        # Histórico de resultados - Formato de grade (6 por linha)
+        # Histórico de resultados - Formato de grade com 6 colunas
         st.subheader("⏱️ Histórico Recente")
         
         if not st.session_state.results:
             st.info("Nenhum resultado registrado ainda")
         else:
-            # Agrupar resultados em linhas de 6
-            results_to_display = st.session_state.results[:18]  # Mostrar até 18 resultados (3 linhas)
-            rows = [results_to_display[i:i+6] for i in range(0, len(results_to_display), 6)]
+            # Exibir os resultados em linhas de 6
+            results_to_display = st.session_state.results[:18]  # Limitar a 18 resultados (3 linhas)
             
-            for row in rows:
-                st.markdown('<div class="history-grid">', unsafe_allow_html=True)
+            # Calcular o número de linhas necessárias
+            num_rows = (len(results_to_display) + 5) // 6  # Arredondar para cima
+            
+            for row_idx in range(num_rows):
+                start_index = row_idx * 6
+                end_index = start_index + 6
+                row_results = results_to_display[start_index:end_index]
                 
-                for result in row:
+                # Criar uma linha com 6 itens
+                st.markdown('<div class="history-row">', unsafe_allow_html=True)
+                
+                for result in row_results:
                     # Determinar a classe CSS baseada no resultado
                     if result['outcome'] == 'PLAYER':
-                        css_class = "player-cell"
+                        css_class = "player-item"
                     elif result['outcome'] == 'BANKER':
-                        css_class = "banker-cell"
+                        css_class = "banker-item"
                     else:
-                        css_class = "tie-cell"
+                        css_class = "tie-item"
                     
                     st.markdown(
-                        f'<div class="history-cell {css_class}">{result["player"]}-{result["banker"]}</div>',
+                        f'<div class="history-item {css_class}">{result["player"]}-{result["banker"]}</div>',
                         unsafe_allow_html=True
                     )
                 
