@@ -608,20 +608,14 @@ def perform_advanced_analysis():
 
     st.session_state.advanced_analysis = analysis
 
-# Interface do usuário completa com histórico ajustado
+# Interface do usuário completa com histórico no estilo Bac Bo
 def main():
     st.set_page_config(layout="wide", page_title="Bac Bo Analyzer PRO")
     
-    # CSS personalizado ATUALIZADO
+    # CSS personalizado ATUALIZADO com estilo de bolinhas
     st.markdown("""
     <style>
-        .big-font {
-            font-size: 50px !important;
-            font-weight: bold;
-            background: -webkit-linear-gradient(#eee, #333);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        /* Estilos gerais */
         .recommendation-box {
             padding: 20px;
             border-radius: 10px;
@@ -631,22 +625,67 @@ def main():
             border: 2px solid #4a4e69;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
-        .metric-box {
-            background-color: #0e1117;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            margin: 10px 0;
+        
+        /* Estilo das bolinhas do Bac Bo */
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 3px;
         }
-        .player { color: #4cc9f0; }
-        .banker { color: #f72585; }
-        .tie { color: #2ec4b6; }
-        .history-item {
-            border-radius: 10px;
-            padding: 8px;
-            margin: 5px 0;
-            text-align: center;
+        
+        .dice-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: bold;
+            font-size: 18px;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .player-dice { background: linear-gradient(145deg, #2193b0, #6dd5ed); }
+        .banker-dice { background: linear-gradient(145deg, #f85032, #e73827); }
+        
+        .result-circle {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+            margin: 0 auto;
+        }
+        
+        .player-result { background-color: #4cc9f0; }
+        .banker-result { background-color: #f72585; }
+        .tie-result { background-color: #2ec4b6; }
+        
+        .history-item {
+            padding: 10px;
+            border-radius: 10px;
+            background-color: #0e1117;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .input-dice {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 5px;
+        }
+        
+        .input-label {
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #aaa;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -668,13 +707,36 @@ def main():
         # Métricas de desempenho
         st.metric("🤖 Performance IA", "Sistema")
         
-        # Botões de entrada
+        # Botões de entrada - Estilo Bac Bo
         with st.form("entry_form"):
-            st.subheader("➕ Adicionar Resultado")
-            p_score = st.selectbox("Player", options=list(range(2, 13)))  # Corrigido
-            b_score = st.selectbox("Banker", options=list(range(2, 13)))  # Corrigido
+            st.subheader("🎮 Adicionar Resultado")
             
-            if st.form_submit_button("Registrar Resultado"):
+            # Layout de entrada com estilo de dados
+            col_p, col_b = st.columns(2)
+            
+            with col_p:
+                st.markdown('<div class="input-label">PLAYER</div>', unsafe_allow_html=True)
+                p_score = st.selectbox("Player", options=list(range(2, 13)), label_visibility="collapsed")
+                
+            with col_b:
+                st.markdown('<div class="input-label">BANKER</div>', unsafe_allow_html=True)
+                b_score = st.selectbox("Banker", options=list(range(2, 13)), label_visibility="collapsed")
+            
+            # Visualização dos dados selecionados
+            st.markdown("""
+            <div style="display: flex; justify-content: center; gap: 20px; margin: 15px 0;">
+                <div class="input-dice">
+                    <div class="input-label">PLAYER</div>
+                    <div class="dice-circle player-dice">%s</div>
+                </div>
+                <div class="input-dice">
+                    <div class="input-label">BANKER</div>
+                    <div class="dice-circle banker-dice">%s</div>
+                </div>
+            </div>
+            """ % (p_score, b_score), unsafe_allow_html=True)
+            
+            if st.form_submit_button("🎯 Registrar Resultado", use_container_width=True):
                 add_result(p_score, b_score)
                 st.rerun()
 
@@ -691,16 +753,33 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        # Histórico de resultados
+        # Histórico de resultados no estilo Bac Bo
         st.subheader("⏱️ Histórico Recente")
+        
+        # Exibir os últimos 10 resultados em formato de bolinhas
         history_cols = st.columns(10)
         for i, result in enumerate(st.session_state.results[:10]):
             with history_cols[i]:
+                # Determinar a cor do resultado
+                result_class = ""
+                if result['outcome'] == 'PLAYER':
+                    result_class = "player-result"
+                    result_char = "P"
+                elif result['outcome'] == 'BANKER':
+                    result_class = "banker-result"
+                    result_char = "B"
+                else:
+                    result_class = "tie-result"
+                    result_char = "T"
+                
                 st.markdown(f"""
-                <div class="history-item" style="background-color: {result['color']}20; color: {result['color']};">
-                    <div>P: {result['player']}</div>
-                    <div>B: {result['banker']}</div>
-                    <div><b>{result['outcome'][0]}</b></div>
+                <div class="history-item">
+                    <div class="dice-container">
+                        <div class="dice-circle player-dice">{result['player']}</div>
+                        <div class="dice-circle banker-dice">{result['banker']}</div>
+                    </div>
+                    <div class="result-circle {result_class}">{result_char}</div>
+                    <div style="font-size: 10px; margin-top: 5px;">{result['timestamp']}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
