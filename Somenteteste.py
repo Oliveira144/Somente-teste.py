@@ -564,7 +564,7 @@ def determine_risk_level(analysis):
     return 'LOW'
 
 def get_best_recommendation():
-    results = st.session_session.results
+        results = st.session_state.results # Correção
     if len(results) < 3:
         return {
             'type': 'AGUARDAR',
