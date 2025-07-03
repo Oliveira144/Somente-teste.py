@@ -871,7 +871,7 @@ def main():
                     st.write(f"Conf: {round(pred.get('strength', 0) * 100)}%")
         
         with cols[3]:
-            st.metric("🤖 Performance IA", "Sistema")
+            st.m metric("🤖 Performance IA", "Sistema")
             st.write(f"Confiança: {round(st.session_state.advanced_analysis['confidence'])}%")
             st.write(f"Algoritmos: {len(st.session_state.advanced_analysis['predictions'])}")
             st.write(f"Dados: {len(st.session_state.results)}")
