@@ -107,11 +107,10 @@ def analyze_streaks():
         if current_streak['type'] == outcome:
             current_streak['count'] += 1
         else:
-            if current_streak['type'] and current_streak['count'] > 0: # Changed to > 0 to include streaks of 1
+            if current_streak['type'] and current_streak['count'] > 0:
                 streaks[current_streak['type']].append(current_streak['count'])
             current_streak = {'type': outcome, 'count': 1}
 
-    # Add the last streak if it exists and has a count > 0
     if current_streak['type'] and current_streak['count'] > 0:
         streaks[current_streak['type']].append(current_streak['count'])
 
@@ -131,17 +130,16 @@ def analyze_streaks():
     return {
         'maxStreaks': max_streaks,
         'avgStreaks': avg_streaks,
-        'currentStreak': current_streak # This might not be the actual "current streak" if results are reversed
+        'currentStreak': current_streak
     }
 
 def analyze_alternations():
     results = st.session_state.results
-    if len(results) < 2: # Need at least 2 results to check for alternation
+    if len(results) < 2:
         return {'rate': 0, 'pattern': 'NONE', 'alternations': 0, 'consecutives': 0}
 
     alternations = 0
     
-    # Iterate from the second most recent result to the oldest
     for i in range(len(results) - 1, 0, -1):
         if results[i]['outcome'] != results[i-1]['outcome']:
             alternations += 1
@@ -180,14 +178,9 @@ def analyze_distribution():
     if n == 0:
         return {'deviations': {}, 'expected': {'player': 0, 'banker': 0, 'tie': 0}}
     
-    # These probabilities are theoretical for a standard Baccarat game.
-    # For Bac Bo, where outcomes are determined by dice, the probabilities
-    # for Player, Banker, Tie are different. This part might need adjustment
-    # if you have specific theoretical probabilities for Player/Banker/Tie in Bac Bo.
-    # Assuming these are just example weights for distribution analysis.
-    expected_player_ratio = 0.486 # Example
-    expected_banker_ratio = 0.486 # Example
-    expected_tie_ratio = 0.028   # Example
+    expected_player_ratio = 0.486
+    expected_banker_ratio = 0.486
+    expected_tie_ratio = 0.028
 
     expected_player = n * expected_player_ratio
     expected_banker = n * expected_banker_ratio
@@ -204,22 +197,18 @@ def analyze_distribution():
 
 def analyze_correlations():
     results = st.session_state.results
-    if len(results) < 2: # Need at least 2 results to correlate current with previous
+    if len(results) < 2:
         return {'playerNumberCorrelation': 0, 'bankerNumberCorrelation': 0, 'outcomeCorrelation': 0}
     
     player_corr_sum = 0
     banker_corr_sum = 0
     
-    # Correlate recent N results, adjust N based on how far back you want to look
-    n_correlate = min(len(results) - 1, 20) # Look at up to 20 pairs
+    n_correlate = min(len(results) - 1, 20)
 
     for i in range(1, n_correlate + 1):
-        # results are ordered from newest to oldest.
-        # So results[i] is older than results[i-1]
         curr_idx = i - 1
         prev_idx = i
         
-        # Ensure indices are valid
         if curr_idx >= 0 and prev_idx < len(results):
             curr = results[curr_idx]
             prev = results[prev_idx]
@@ -237,15 +226,13 @@ def analyze_correlations():
 
 def analyze_outcome_correlation():
     results = st.session_state.results
-    if len(results) < 4: # Need at least 4 results for a 3-game lag correlation
+    if len(results) < 4:
         return 0
 
     matches = 0
-    # Look at correlation with a 3-game lag for the most recent 10 such comparisons
     n_lag_check = min(len(results) - 3, 10) 
 
     for i in range(3, 3 + n_lag_check):
-        # results are newest to oldest, so results[i] is older than results[i-3]
         if results[i]['outcome'] == results[i-3]['outcome']:
             matches += 1
 
@@ -253,16 +240,14 @@ def analyze_outcome_correlation():
 
 def analyze_sequences():
     results = st.session_state.results
-    if len(results) < 2: # Need at least 2 results to form a sequence
+    if len(results) < 2:
         return {'sequences': {}, 'topSequences': []}
 
     sequences = defaultdict(int)
     
-    # Iterate through results from oldest to newest to build sequences in chronological order
-    # (assuming results are stored newest-first, we need to reverse for sequence building)
     chronological_results = results[::-1] 
 
-    for length in range(2, min(5, len(chronological_results) + 1)): # Max length 4 or num results
+    for length in range(2, min(5, len(chronological_results) + 1)):
         for i in range(len(chronological_results) - length + 1):
             seq = '-'.join(r['outcome'] for r in chronological_results[i:i+length])
             sequences[seq] += 1
@@ -280,13 +265,12 @@ def analyze_sequences():
 
 def analyze_cyclical_trends():
     results = st.session_state.results
-    if len(results) < 12: # More data needed for meaningful cycles
+    if len(results) < 12:
         return {}
 
     cycles = [3, 5, 7, 10]
     cyclical_data = {}
 
-    # Iterate through results from oldest to newest for cyclical analysis
     chronological_results = results[::-1] 
 
     for cycle in cycles:
@@ -328,10 +312,10 @@ def analyze_cyclical_trends():
 
 def calculate_volatility():
     results = st.session_state.results
-    if len(results) < 2: # Need at least 2 results to calculate changes
+    if len(results) < 2:
         return 0
 
-    recent = results[:20] # Consider up to 20 most recent
+    recent = results[:20]
     changes = 0
     total_surprise = 0
 
@@ -349,7 +333,6 @@ def calculate_volatility():
 def calculate_momentum():
     results = st.session_state.results
     if len(results) < 8:
-        # Return a default dictionary structure if not enough data
         return {
             'direction': 'N/A',
             'strength': 0,
@@ -357,15 +340,14 @@ def calculate_momentum():
             'bankerMomentum': 0
         }
 
-    recent = results[:8] # Consider 8 most recent results
-    # These weights sum up to close to 1, giving more importance to recent games
+    recent = results[:8]
     weights = [0.4, 0.3, 0.15, 0.08, 0.04, 0.02, 0.01, 0.005] 
     
     player_momentum = 0
     banker_momentum = 0
 
     for i, result in enumerate(recent):
-        if i < len(weights): # Ensure we don't go out of bounds for weights
+        if i < len(weights):
             weight = weights[i]
             if result['outcome'] == 'PLAYER':
                 player_momentum += weight
@@ -387,19 +369,10 @@ def calculate_momentum():
 def generate_predictions():
     predictions = []
     
-    # Algoritmo 1: Análise de Reversão
     predictions.append(generate_reversion_prediction())
-    
-    # Algoritmo 2: Análise de Momentum
     predictions.append(generate_momentum_prediction())
-    
-    # Algoritmo 3: Análise Cíclica
     predictions.append(generate_cyclical_prediction())
-    
-    # Algoritmo 4: Análise de Distribuição
     predictions.append(generate_distribution_prediction())
-    
-    # Algoritmo 5: Análise de Padrões
     predictions.append(generate_pattern_prediction())
     
     return [p for p in predictions if p['confidence'] > 30]
@@ -409,25 +382,22 @@ def generate_reversion_prediction():
     if len(results) < 5:
         return {'type': 'WAIT', 'confidence': 0, 'reason': 'Dados insuficientes', 'algorithm': 'REVERSION'}
 
-    recent = results[:5] # Check the 5 most recent games
+    recent = results[:5]
     
-    # Ensure there's at least one result to get the last outcome
     if not recent:
         return {'type': 'WAIT', 'confidence': 0, 'reason': 'Dados insuficientes', 'algorithm': 'REVERSION'}
 
     last_outcome = recent[0]['outcome']
     
-    # Count consecutive outcomes starting from the most recent
     consecutive_count = 0
     for r in recent:
         if r['outcome'] == last_outcome:
             consecutive_count += 1
         else:
-            break # Stop counting if the streak breaks
+            break
 
     if consecutive_count >= 4:
         opposite = 'BANKER' if last_outcome == 'PLAYER' else 'PLAYER' if last_outcome == 'BANKER' else 'TIE'
-        # Confidence increases with longer streaks, up to 85%
         confidence = min(85, 45 + (consecutive_count * 10)) 
         return {
             'type': opposite,
@@ -452,15 +422,13 @@ def generate_momentum_prediction():
     if not momentum or momentum.get('direction') == 'N/A' or momentum.get('strength', 0) == 0:
         return {'type': 'WAIT', 'confidence': 0, 'reason': 'Momentum indisponível ou fraco', 'algorithm': 'MOMENTUM'}
     
-    # High momentum strength for a direct prediction
-    if momentum.get('strength', 0) > 0.4: # Adjusted threshold for stronger signal
+    if momentum.get('strength', 0) > 0.4:
         return {
             'type': momentum['direction'],
             'confidence': min(75, 40 + int(momentum['strength'] * 100)),
             'reason': f'Momento forte para {momentum["direction"]}',
             'algorithm': 'MOMENTUM'
         }
-    # Moderate momentum strength for a leaning prediction
     elif momentum.get('strength', 0) > 0.2:
         return {
             'type': momentum['direction'],
@@ -479,10 +447,10 @@ def generate_momentum_prediction():
 
 def generate_cyclical_prediction():
     cyclical_trends = st.session_state.advanced_analysis.get('cyclicalTrends', {})
-    cycle5_data = cyclical_trends.get('cycle5', {}) # Use cycle5 for prediction
+    cycle5_data = cyclical_trends.get('cycle5', {})
     predicted_next_phase = cycle5_data.get('predictedNext', {})
     
-    if not predicted_next_phase or predicted_next_phase.get('strength', 0) <= 0.5: # Adjusted strength threshold
+    if not predicted_next_phase or predicted_next_phase.get('strength', 0) <= 0.5:
         return {
             'type': 'RANDOM',
             'confidence': 30,
@@ -503,7 +471,6 @@ def generate_distribution_prediction():
     deviations = distribution.get('deviations', {})
     stats = st.session_state.current_stats
     
-    # Check if player is significantly below expected and recommend player
     if stats['totalGames'] > 10 and deviations.get('player', 0) > 0.2 and \
        (stats['player'] / stats['totalGames'] < (distribution['expected']['player'] / stats['totalGames'] if stats['totalGames'] > 0 else 0) * 0.8):
         return {
@@ -513,7 +480,6 @@ def generate_distribution_prediction():
             'algorithm': 'DISTRIBUTION'
         }
     
-    # Check if banker is significantly below expected and recommend banker
     if stats['totalGames'] > 10 and deviations.get('banker', 0) > 0.2 and \
        (stats['banker'] / stats['totalGames'] < (distribution['expected']['banker'] / stats['totalGames'] if stats['totalGames'] > 0 else 0) * 0.8):
         return {
@@ -535,7 +501,7 @@ def generate_pattern_prediction():
     sequences_analysis = patterns.get('sequences', {})
     top_sequences = sequences_analysis.get('topSequences', [])
     
-    if not top_sequences or top_sequences[0]['probability'] <= 0.20: # Higher threshold for strong pattern
+    if not top_sequences or top_sequences[0]['probability'] <= 0.20:
         return {
             'type': 'RANDOM',
             'confidence': 25,
@@ -543,15 +509,9 @@ def generate_pattern_prediction():
             'algorithm': 'PATTERN'
         }
     
-    # Predict the next element in the most frequent sequence
     most_frequent_seq = top_sequences[0]['sequence']
     sequence_parts = most_frequent_seq.split('-')
-    next_expected = sequence_parts[-1] # The last element of the most frequent sequence
-
-    # You could add logic here to predict based on the *next* expected outcome
-    # if the sequence is 'P-P-B', and current is 'P-P', then predict 'B'
-    # This requires more complex sequence matching to the *end* of the results list.
-    # For now, this simply predicts the last element of the most frequent sequence found anywhere.
+    next_expected = sequence_parts[-1]
 
     return {
         'type': next_expected,
@@ -569,7 +529,6 @@ def calculate_overall_confidence(analysis):
     if not predictions:
         return 30
 
-    # Weights adjusted for perceived importance
     weights = {
         'REVERSION': 0.25,
         'MOMENTUM': 0.20,
@@ -582,15 +541,14 @@ def calculate_overall_confidence(analysis):
     total_weight = 0
 
     for pred in predictions:
-        weight = weights.get(pred['algorithm'], 0) # Use 0 if algorithm not in weights
+        weight = weights.get(pred['algorithm'], 0)
         weighted_confidence += pred['confidence'] * weight
         total_weight += weight
 
     base_confidence = weighted_confidence / total_weight if total_weight > 0 else 30
     
-    # Multipliers for data quality and volatility
-    data_quality_multiplier = min(1.2, 0.8 + (len(results) * 0.01)) # More data, higher quality
-    volatility_adjustment = 0.9 if analysis['volatility'] > 70 else 1.1 if analysis['volatility'] < 30 else 1 # High volatility reduces confidence
+    data_quality_multiplier = min(1.2, 0.8 + (len(results) * 0.01))
+    volatility_adjustment = 0.9 if analysis['volatility'] > 70 else 1.1 if analysis['volatility'] < 30 else 1
 
     confidence = min(95, max(25, base_confidence * data_quality_multiplier * volatility_adjustment))
     return round(confidence)
@@ -599,9 +557,9 @@ def determine_risk_level(analysis):
     volatility = analysis['volatility']
     confidence = analysis['confidence']
 
-    if volatility > 75 or confidence < 45: # Higher thresholds for HIGH risk
+    if volatility > 75 or confidence < 45:
         return 'HIGH'
-    if volatility > 55 or confidence < 60: # Medium thresholds
+    if volatility > 55 or confidence < 60:
         return 'MEDIUM'
     return 'LOW'
 
@@ -618,13 +576,11 @@ def get_best_recommendation():
 
     predictions = st.session_state.advanced_analysis.get('predictions', [])
     
-    # If no strong predictions, use a default Player recommendation (common in Baccarat due to no commission)
-    # This might need adjustment for Bac Bo if Banker is truly better odds.
     if not predictions:
         return {
             'type': 'PLAYER',
             'reason': 'Nenhuma previsão forte no momento, recomendação padrão (sem comissão)',
-            'confidence': 50, # Neutral confidence
+            'confidence': 50,
             'color': '#4285F4',
             'algorithm': 'DEFAULT'
         }
@@ -632,8 +588,7 @@ def get_best_recommendation():
     consensus_map = {}
     for pred in predictions:
         pred_type = pred['type']
-        # Only consider actionable predictions with sufficient confidence
-        if pred_type not in ['WAIT', 'RANDOM', 'BALANCED'] and pred['confidence'] > 50: # Only consider confident predictions
+        if pred_type not in ['WAIT', 'RANDOM', 'BALANCED'] and pred['confidence'] > 50:
             consensus_map[pred_type] = consensus_map.get(pred_type, 0) + pred['confidence']
 
     if not consensus_map:
@@ -645,10 +600,8 @@ def get_best_recommendation():
             'algorithm': 'CONSENSUS'
         }
 
-    # Get the outcome with the highest combined confidence
     best_consensus_type, total_consensus_confidence = max(consensus_map.items(), key=lambda x: x[1])
     
-    # Calculate average confidence for the best type
     supporting_algos = sum(1 for p in predictions if p['type'] == best_consensus_type and p['confidence'] > 50)
     avg_confidence = min(95, total_consensus_confidence / supporting_algos) if supporting_algos else 0
 
@@ -662,7 +615,6 @@ def get_best_recommendation():
     }
 
 def analyze_patterns():
-    # Only calculate patterns if there's enough data
     if len(st.session_state.results) < 2:
         return {}
     
@@ -680,12 +632,12 @@ def analyze_patterns():
 def perform_advanced_analysis():
     if not st.session_state.results:
         st.session_state.current_stats = {'player':0, 'banker':0, 'tie':0, 'totalGames':0}
-        st.session_state.advanced_analysis = { # Reset advanced analysis if no results
+        st.session_state.advanced_analysis = {
             'patterns': {},
             'predictions': [],
             'confidence': 0,
             'volatility': 0,
-            'momentum': {'direction': 'N/A', 'strength': 0, 'playerMomentum': 0, 'bankerMomentum': 0}, # Ensure momentum is a dict
+            'momentum': {'direction': 'N/A', 'strength': 0, 'playerMomentum': 0, 'bankerMomentum': 0},
             'cyclicalTrends': {},
             'riskLevel': 'LOW'
         }
@@ -698,7 +650,7 @@ def perform_advanced_analysis():
         'patterns': analyze_patterns(),
         'cyclicalTrends': analyze_cyclical_trends(),
         'volatility': calculate_volatility(),
-        'momentum': calculate_momentum(), # This now always returns a dict
+        'momentum': calculate_momentum(),
         'predictions': generate_predictions(),
         'confidence': 0,
         'riskLevel': 'LOW'
@@ -713,7 +665,7 @@ def perform_advanced_analysis():
 def main():
     st.set_page_config(layout="wide", page_title="Bac Bo Analyzer PRO")
     
-    # CSS personalizado compacto
+    # CSS personalizado para o layout em linha de 6 resultados
     st.markdown("""
     <style>
         .recommendation-box {
@@ -727,35 +679,38 @@ def main():
         }
         
         .history-grid {
-            display: flex; /* Use flexbox for horizontal layout */
-            flex-wrap: wrap; /* Allow items to wrap to the next line */
-            gap: 10px; /* Space between items */
-            justify-content: flex-start; /* Align items to the start */
+            display: flex;
+            flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
+            gap: 8px; /* Espaço entre os itens */
             padding: 10px 0;
+            justify-content: flex-start; /* Alinha os itens ao início */
+            width: 100%; /* Garante que o container use a largura total para a quebra */
         }
         .history-item {
-            width: 50px; /* Fixed width for each item */
-            height: 50px; /* Fixed height for each item */
+            width: calc((100% / 6) - 8px); /* 100% dividido por 6 itens, subtraindo o gap */
+            max-width: 60px; /* Limite máximo para o item, ajuste conforme necessário */
+            height: 60px; /* Altura do item */
             border-radius: 8px;
             display: flex;
-            flex-direction: column; /* Stack player and banker scores vertically */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             font-size: 1.1em;
             font-weight: bold;
             color: white;
-            padding: 2px; /* Small padding inside the box */
-            box-sizing: border-box; /* Include padding in width/height */
+            padding: 2px;
+            box-sizing: border-box;
+            flex-shrink: 0; /* Evita que os itens encolham */
         }
         .score-display {
-            font-size: 0.9em; /* Adjust font size for scores */
-            line-height: 1.2; /* Adjust line height for vertical spacing */
+            font-size: 0.9em;
+            line-height: 1.2;
         }
         .player-score {
-            color: white; /* Player score is white on colored background */
+            color: white;
         }
         .banker-score {
-            color: white; /* Banker score is white on colored background */
+            color: white;
         }
         .header-section {
             background-color: #1e2130;
@@ -822,8 +777,8 @@ def main():
     
     # History Display
     st.markdown('<div class="history-grid">', unsafe_allow_html=True)
-    # Display up to 8 recent results, matching the image.
-    for result in st.session_state.results[:8]: # Limit to 8 results for display
+    # Display all results (up to 100) as they will wrap according to CSS
+    for result in st.session_state.results: 
         st.markdown(f"""
         <div class="history-item" style="background-color: {result['color']};">
             <div class="score-display player-score">{result['player']}</div>
