@@ -46,7 +46,7 @@ def add_result(player_score, banker_score):
     try:
         pScore = int(player_score)
         bScore = int(banker_score)
-    except ValueError: # Catch specific ValueError for better error handling
+    except ValueError:
         st.error("Por favor, insira números válidos.")
         return
 
@@ -71,8 +71,8 @@ def add_result(player_score, banker_score):
         'outcome': outcome,
         'color': color,
         'timestamp': datetime.now().strftime("%H:%M:%S"),
-        'playerProb': DICE_PROBABILITIES.get(pScore, 0), # Use .get() for safety
-        'bankerProb': DICE_PROBABILITIES.get(bScore, 0), # Use .get() for safety
+        'playerProb': DICE_PROBABILITIES.get(pScore, 0),
+        'bankerProb': DICE_PROBABILITIES.get(bScore, 0),
         'surprise': calculate_surprise(pScore, bScore),
         'gameNumber': len(st.session_state.results) + 1
     }
@@ -687,7 +687,12 @@ def main():
             width: 100%; /* Garante que o container use a largura total para a quebra */
         }
         .history-item {
-            width: calc((100% / 6) - 8px); /* 100% dividido por 6 itens, subtraindo o gap */
+            /* 100% dividido por 6 itens, subtraindo o gap, para ter 6 por linha */
+            width: calc((100% / 6) - 8px); 
+            /* Se a tela for muito estreita e calc() não for suficiente, 
+               pode-se adicionar um min-width para evitar que fiquem minúsculos 
+               ou um max-width para telas muito largas. */
+            min-width: 50px; /* Garante um tamanho mínimo para visualização em telas pequenas */
             max-width: 60px; /* Limite máximo para o item, ajuste conforme necessário */
             height: 60px; /* Altura do item */
             border-radius: 8px;
@@ -700,7 +705,7 @@ def main():
             color: white;
             padding: 2px;
             box-sizing: border-box;
-            flex-shrink: 0; /* Evita que os itens encolham */
+            flex-shrink: 0; /* Evita que os itens encolham abaixo do seu tamanho calculado */
         }
         .score-display {
             font-size: 0.9em;
@@ -777,7 +782,7 @@ def main():
     
     # History Display
     st.markdown('<div class="history-grid">', unsafe_allow_html=True)
-    # Display all results (up to 100) as they will wrap according to CSS
+    # Exibe todos os resultados (até 100)
     for result in st.session_state.results: 
         st.markdown(f"""
         <div class="history-item" style="background-color: {result['color']};">
