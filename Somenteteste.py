@@ -608,90 +608,111 @@ def perform_advanced_analysis():
 
     st.session_state.advanced_analysis = analysis
 
-# Interface do usuário completa com histórico em grade de 6 colunas
+# Interface do usuário com histórico compacto
 def main():
     st.set_page_config(layout="wide", page_title="Bac Bo Analyzer PRO")
     
-    # CSS personalizado
+    # CSS personalizado compacto
     st.markdown("""
     <style>
         .recommendation-box {
-            padding: 20px;
-            border-radius: 10px;
+            padding: 15px;
+            border-radius: 8px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             background-color: #1e2130;
             border: 2px solid #4a4e69;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
         .history-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 15px;
         }
         
         .history-item {
-            min-width: 60px;
-            height: 60px;
+            min-width: 30px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            font-size: 24px;
+            border-radius: 4px;
+            font-size: 14px;
             font-weight: bold;
             background-color: #0e1117;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
         .player-item {
             color: #4cc9f0;
-            border: 3px solid #4cc9f0;
+            background-color: rgba(76, 201, 240, 0.1);
+            border: 1px solid #4cc9f0;
         }
         
         .banker-item {
             color: #f72585;
-            border: 3px solid #f72585;
+            background-color: rgba(247, 37, 133, 0.1);
+            border: 1px solid #f72585;
         }
         
         .tie-item {
             color: #2ec4b6;
-            border: 3px solid #2ec4b6;
+            background-color: rgba(46, 196, 182, 0.1);
+            border: 1px solid #2ec4b6;
         }
         
         .input-container {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             justify-content: center;
-            margin: 20px 0;
+            margin: 15px 0;
         }
         
         .input-box {
             text-align: center;
-            padding: 10px;
-            border-radius: 10px;
+            padding: 8px;
+            border-radius: 8px;
             background-color: #1e2130;
-            min-width: 120px;
+            min-width: 100px;
         }
         
         .input-label {
-            font-size: 14px;
+            font-size: 12px;
             color: #aaa;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
         
         .input-value {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
         }
         
         .stat-card {
             background-color: #1e2130;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid #4a4e69;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-left: 3px solid #4a4e69;
+        }
+        
+        .metric-box {
+            background-color: #1e2130;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .metric-value {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #aaa;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -713,8 +734,8 @@ def main():
         # Métricas de desempenho
         st.markdown("""
         <div class="stat-card">
-            <div style="font-size: 14px; color: #aaa;">🤖 Performance IA</div>
-            <div style="font-size: 24px; font-weight: bold;">Sistema</div>
+            <div style="font-size: 12px; color: #aaa;">🤖 Performance IA</div>
+            <div style="font-size: 20px; font-weight: bold;">Sistema</div>
         </div>
         """, unsafe_allow_html=True)
         
@@ -757,52 +778,46 @@ def main():
         recommendation = get_best_recommendation()
         st.markdown(f"""
         <div class="recommendation-box" style="border-color: {recommendation['color']};">
-            <h3>🎯 RECOMENDAÇÃO: {recommendation['type']}</h3>
-            <p>Confiança: {recommendation['confidence']}%</p>
-            <p>{recommendation['reason']}</p>
+            <h3 style="margin:0; font-size:18px;">🎯 RECOMENDAÇÃO: {recommendation['type']}</h3>
+            <p style="margin:5px 0;">Confiança: {recommendation['confidence']}%</p>
+            <p style="margin:0; font-size:14px;">{recommendation['reason']}</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # Histórico de resultados - Formato de grade com 6 colunas
+        # Histórico de resultados - Formato compacto
         st.subheader("⏱️ Histórico Recente")
         
         if not st.session_state.results:
             st.info("Nenhum resultado registrado ainda")
         else:
             # Exibir os resultados em uma grade de 6 colunas
-            results_to_display = st.session_state.results[:12]  # Mostrar até 12 resultados (2 linhas)
+            results_to_display = st.session_state.results[:18]  # Mostrar até 18 resultados
             
             # Calcular o número de linhas necessárias (arredondar para cima)
             num_rows = (len(results_to_display) + 5) // 6
             
-            for row_idx in range(num_rows):
-                start_index = row_idx * 6
-                end_index = min(start_index + 6, len(results_to_display))
-                row_results = results_to_display[start_index:end_index]
+            st.markdown('<div class="history-grid">', unsafe_allow_html=True)
+            
+            for result in results_to_display:
+                # Determinar a classe CSS baseada no resultado
+                if result['outcome'] == 'PLAYER':
+                    css_class = "player-item"
+                elif result['outcome'] == 'BANKER':
+                    css_class = "banker-item"
+                else:
+                    css_class = "tie-item"
                 
-                # Criar uma linha (grid) para os resultados
-                st.markdown('<div class="history-grid">', unsafe_allow_html=True)
-                
-                for result in row_results:
-                    # Determinar a classe CSS baseada no resultado
-                    if result['outcome'] == 'PLAYER':
-                        css_class = "player-item"
-                    elif result['outcome'] == 'BANKER':
-                        css_class = "banker-item"
-                    else:
-                        css_class = "tie-item"
-                    
-                    st.markdown(
-                        f'<div class="history-item {css_class}">{result["player"]}-{result["banker"]}</div>',
-                        unsafe_allow_html=True
-                    )
-                
-                # Preencher com itens vazios se a linha não estiver completa
-                if len(row_results) < 6:
-                    for _ in range(6 - len(row_results)):
-                        st.markdown('<div class="history-item"></div>', unsafe_allow_html=True)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="history-item {css_class}">{result["player"]}-{result["banker"]}</div>',
+                    unsafe_allow_html=True
+                )
+            
+            # Preencher com itens vazios se a grade não estiver completa
+            remaining = 18 - len(results_to_display)
+            for _ in range(remaining):
+                st.markdown('<div class="history-item"></div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
     # Seção de análise detalhada
     st.divider()
@@ -824,22 +839,54 @@ def main():
         a_col1, a_col2, a_col3 = st.columns(3)
         
         with a_col1:
-            st.metric("📈 Confiança do Sistema", f"{confidence}%")
-            st.metric("⚡ Volatilidade", f"{volatility}%")
+            st.markdown("""
+            <div class="metric-box">
+                <div class="metric-label">📈 Confiança do Sistema</div>
+                <div class="metric-value">{confidence}%</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">⚡ Volatilidade</div>
+                <div class="metric-value">{volatility}%</div>
+            </div>
+            """.format(confidence=confidence, volatility=volatility), unsafe_allow_html=True)
             
         with a_col2:
             if momentum:
                 direction = momentum.get('direction', 'N/A')
                 strength = momentum.get('strength', 0)
-                st.metric("📊 Momentum Atual", direction)
-                st.metric("💪 Força do Momentum", f"{strength*100:.1f}%")
+                st.markdown("""
+                <div class="metric-box">
+                    <div class="metric-label">📊 Momentum Atual</div>
+                    <div class="metric-value">{direction}</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">💪 Força do Momentum</div>
+                    <div class="metric-value">{strength:.1f}%</div>
+                </div>
+                """.format(direction=direction, strength=strength*100), unsafe_allow_html=True)
             else:
-                st.metric("📊 Momentum Atual", "N/A")
-                st.metric("💪 Força do Momentum", "N/A")
+                st.markdown("""
+                <div class="metric-box">
+                    <div class="metric-label">📊 Momentum Atual</div>
+                    <div class="metric-value">N/A</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">💪 Força do Momentum</div>
+                    <div class="metric-value">N/A</div>
+                </div>
+                """, unsafe_allow_html=True)
             
         with a_col3:
-            st.metric("⚠️ Nível de Risco", risk_level)
-            st.metric("🔄 Padrão de Alternância", alternation_pattern)
+            st.markdown("""
+            <div class="metric-box">
+                <div class="metric-label">⚠️ Nível de Risco</div>
+                <div class="metric-value">{risk_level}</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-label">🔄 Padrão de Alternância</div>
+                <div class="metric-value">{alternation_pattern}</div>
+            </div>
+            """.format(risk_level=risk_level, alternation_pattern=alternation_pattern), unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
