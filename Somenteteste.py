@@ -666,13 +666,13 @@ def main():
         st.write(f"Total de Jogos: {st.session_state.current_stats['totalGames']}")
         
         # Métricas de desempenho
-        st.metric("🤖 Performance IA", "Sistema")  # CORREÇÃO APLICADA AQUI
+        st.metric("🤖 Performance IA", "Sistema")
         
         # Botões de entrada
         with st.form("entry_form"):
             st.subheader("➕ Adicionar Resultado")
-            p_score = st.selectbox("Player", options=list(range(2, 13)), 
-            b_score = st.selectbox("Banker", options=list(range(2, 13)))
+            p_score = st.selectbox("Player", options=list(range(2, 13)))  # Corrigido
+            b_score = st.selectbox("Banker", options=list(range(2, 13)))  # Corrigido
             
             if st.form_submit_button("Registrar Resultado"):
                 add_result(p_score, b_score)
