@@ -836,7 +836,7 @@ def main():
                 pred = cycle5.get('predictedNext', {})
                 if pred:
                     st.write(f"Próximo: {pred.get('dominant', 'N/A')}")
-                    st.write(f"Conf: {round(pred.get('strength', 0)*100}%")
+                    st.write(f"Conf: {round(pred.get('strength', 0) * 100)}%")  # CORREÇÃO APLICADA AQUI
         
         with cols[3]:
             st.metric("🤖 Performance IA", "Sistema")
