@@ -608,14 +608,13 @@ def perform_advanced_analysis():
 
     st.session_state.advanced_analysis = analysis
 
-# Interface do usuário completa com histórico organizado
+# Interface do usuário completa com histórico simplificado
 def main():
     st.set_page_config(layout="wide", page_title="Bac Bo Analyzer PRO")
     
-    # CSS personalizado ATUALIZADO
+    # CSS personalizado minimalista
     st.markdown("""
     <style>
-        /* Estilos gerais */
         .recommendation-box {
             padding: 20px;
             border-radius: 10px;
@@ -626,94 +625,61 @@ def main():
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         
-        /* Estilo BAC BO para dados */
-        .dice-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0 3px;
-        }
-        
-        .dice-value {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 22px;
-            color: white;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-            margin: 5px 0;
-        }
-        
-        .player-dice { 
-            background: linear-gradient(145deg, #1e88e5, #0d47a1);
-            border: 2px solid #90caf9;
-        }
-        
-        .banker-dice { 
-            background: linear-gradient(145deg, #e53935, #b71c1c);
-            border: 2px solid #ef9a9a;
-        }
-        
-        .result-dice {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 24px;
-            color: white;
-            margin: 8px auto;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-        }
-        
-        .player-result { 
-            background: linear-gradient(145deg, #1565c0, #0d47a1);
-            border: 2px solid #90caf9;
-        }
-        
-        .banker-result { 
-            background: linear-gradient(145deg, #c62828, #b71c1c);
-            border: 2px solid #ef9a9a;
-        }
-        
-        .tie-result { 
-            background: linear-gradient(145deg, #43a047, #2e7d32);
-            border: 2px solid #a5d6a7;
-        }
-        
-        .history-row {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        
         .history-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
             background-color: #0e1117;
-            border-radius: 10px;
-            padding: 10px;
-            min-width: 100px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-size: 18px;
+            font-weight: bold;
         }
         
-        .history-label {
-            font-size: 10px;
+        .player-item {
+            color: #4cc9f0;
+            border-left: 5px solid #4cc9f0;
+        }
+        
+        .banker-item {
+            color: #f72585;
+            border-left: 5px solid #f72585;
+        }
+        
+        .tie-item {
+            color: #2ec4b6;
+            border-left: 5px solid #2ec4b6;
+        }
+        
+        .timestamp {
+            font-size: 14px;
             color: #aaa;
-            margin-bottom: 5px;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .input-box {
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: #1e2130;
+            min-width: 120px;
         }
         
         .input-label {
-            font-size: 12px;
-            margin-bottom: 5px;
+            font-size: 14px;
             color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .input-value {
+            font-size: 24px;
+            font-weight: bold;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -739,7 +705,6 @@ def main():
         with st.form("entry_form"):
             st.subheader("🎮 Adicionar Resultado")
             
-            # Layout de entrada
             col_p, col_b = st.columns(2)
             
             with col_p:
@@ -752,14 +717,14 @@ def main():
             
             # Visualização dos dados selecionados
             st.markdown(f"""
-            <div style="display:flex; justify-content:center; gap:30px; margin:20px 0;">
-                <div style="text-align:center">
-                    <div>PLAYER</div>
-                    <div class="dice-value player-dice">{p_score}</div>
+            <div class="input-container">
+                <div class="input-box">
+                    <div class="input-label">PLAYER</div>
+                    <div class="input-value">{p_score}</div>
                 </div>
-                <div style="text-align:center">
-                    <div>BANKER</div>
-                    <div class="dice-value banker-dice">{b_score}</div>
+                <div class="input-box">
+                    <div class="input-label">BANKER</div>
+                    <div class="input-value">{b_score}</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -781,44 +746,31 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        # Histórico de resultados - Estilo BAC BO
+        # Histórico de resultados - Formato simplificado
         st.subheader("⏱️ Histórico Recente")
         
         if not st.session_state.results:
             st.info("Nenhum resultado registrado ainda")
         else:
-            # Exibir em linhas de 5 resultados cada
-            for i in range(0, min(10, len(st.session_state.results)), 5):
-                row_results = st.session_state.results[i:i+5]
+            # Exibir os últimos 10 resultados no formato simples
+            for result in st.session_state.results[:10]:
+                # Determinar a classe CSS baseada no resultado
+                if result['outcome'] == 'PLAYER':
+                    css_class = "player-item"
+                    prefix = "PLAYER"
+                elif result['outcome'] == 'BANKER':
+                    css_class = "banker-item"
+                    prefix = "BANKER"
+                else:
+                    css_class = "tie-item"
+                    prefix = "EMPATE"
                 
-                with st.container():
-                    st.markdown('<div class="history-row">', unsafe_allow_html=True)
-                    
-                    for result in row_results:
-                        # Determinar o valor do resultado (número vencedor)
-                        if result['outcome'] == 'PLAYER':
-                            result_value = result['player']
-                            result_class = "player-result"
-                        elif result['outcome'] == 'BANKER':
-                            result_value = result['banker']
-                            result_class = "banker-result"
-                        else:
-                            result_value = result['player']  # empate
-                            result_class = "tie-result"
-                        
-                        st.markdown(f"""
-                        <div class="history-item">
-                            <div class="history-label">Jogo #{result['gameNumber']}</div>
-                            <div style="display:flex; justify-content:center; gap:5px;">
-                                <div class="dice-value player-dice">{result['player']}</div>
-                                <div class="dice-value banker-dice">{result['banker']}</div>
-                            </div>
-                            <div class="result-dice {result_class}">{result_value}</div>
-                            <div style="font-size:10px; color:#bbb;">{result['timestamp']}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    
-                    st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class="history-item {css_class}">
+                    {prefix} {result['player']} - {result['banker']}
+                    <div class="timestamp">{result['timestamp']}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
     # Seção de análise detalhada
     st.divider()
