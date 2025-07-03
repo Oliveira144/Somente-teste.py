@@ -608,7 +608,7 @@ def perform_advanced_analysis():
 
     st.session_state.advanced_analysis = analysis
 
-# Interface do usuário com histórico em grade de 6 colunas
+# Interface do usuário completa com histórico em grade de 6 colunas
 def main():
     st.set_page_config(layout="wide", page_title="Bac Bo Analyzer PRO")
     
@@ -625,10 +625,11 @@ def main():
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
         
-        .history-row {
-            display: flex;
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
         
         .history-item {
@@ -642,7 +643,6 @@ def main():
             font-weight: bold;
             background-color: #0e1117;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            flex: 1;
         }
         
         .player-item {
@@ -692,13 +692,6 @@ def main():
             padding: 15px;
             margin-bottom: 15px;
             border-left: 4px solid #4a4e69;
-        }
-        
-        .history-title {
-            margin-bottom: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #f8f9fa;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -776,19 +769,19 @@ def main():
         if not st.session_state.results:
             st.info("Nenhum resultado registrado ainda")
         else:
-            # Exibir os resultados em linhas de 6
-            results_to_display = st.session_state.results[:18]  # Limitar a 18 resultados (3 linhas)
+            # Exibir os resultados em uma grade de 6 colunas
+            results_to_display = st.session_state.results[:12]  # Mostrar até 12 resultados (2 linhas)
             
-            # Calcular o número de linhas necessárias
-            num_rows = (len(results_to_display) + 5) // 6  # Arredondar para cima
+            # Calcular o número de linhas necessárias (arredondar para cima)
+            num_rows = (len(results_to_display) + 5) // 6
             
             for row_idx in range(num_rows):
                 start_index = row_idx * 6
-                end_index = start_index + 6
+                end_index = min(start_index + 6, len(results_to_display))
                 row_results = results_to_display[start_index:end_index]
                 
-                # Criar uma linha com 6 itens
-                st.markdown('<div class="history-row">', unsafe_allow_html=True)
+                # Criar uma linha (grid) para os resultados
+                st.markdown('<div class="history-grid">', unsafe_allow_html=True)
                 
                 for result in row_results:
                     # Determinar a classe CSS baseada no resultado
@@ -803,6 +796,11 @@ def main():
                         f'<div class="history-item {css_class}">{result["player"]}-{result["banker"]}</div>',
                         unsafe_allow_html=True
                     )
+                
+                # Preencher com itens vazios se a linha não estiver completa
+                if len(row_results) < 6:
+                    for _ in range(6 - len(row_results)):
+                        st.markdown('<div class="history-item"></div>', unsafe_allow_html=True)
                 
                 st.markdown('</div>', unsafe_allow_html=True)
 
