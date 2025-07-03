@@ -608,11 +608,11 @@ def perform_advanced_analysis():
 
     st.session_state.advanced_analysis = analysis
 
-# Interface do usuário
+# Interface do usuário completa com histórico ajustado
 def main():
     st.set_page_config(layout="wide", page_title="Bac Bo Analyzer PRO")
     
-    # CSS personalizado
+    # CSS personalizado ATUALIZADO
     st.markdown("""
     <style>
         .big-font {
@@ -648,22 +648,39 @@ def main():
             background-color: rgba(255, 255, 0, 0.1);
             border: 1px solid yellow;
         }
+        /* HISTÓRICO ATUALIZADO - MAIS COMPACTO */
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 4px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 2px;
+            margin-bottom: 15px;
         }
         .grid-item {
             aspect-ratio: 1/1;
-            border-radius: 5px;
+            border-radius: 3px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 10px;
+            font-size: 8px;
             font-weight: bold;
             color: white;
+            padding: 1px;
+            position: relative;
+        }
+        .grid-item.rare::after {
+            content: "★";
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            color: gold;
+            font-size: 6px;
+        }
+        .compact-table {
+            font-size: 12px;
+        }
+        .compact-table th, .compact-table td {
+            padding: 2px 5px !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -771,35 +788,50 @@ def main():
         else:
             st.info("Coletando dados para análise...")
 
-        # Histórico de Resultados
+        # Histórico de Resultados ATUALIZADO
         st.subheader("🕒 Histórico de Resultados")
         if st.session_state.results:
-            # Roadmap
+            # Roadmap compacto
             st.markdown('<div class="grid-container">', unsafe_allow_html=True)
-            for i, result in enumerate(st.session_state.results[:60]):
-                surprise_badge = "🔺" if result['surprise'] > 80 else ""
+            for i, result in enumerate(st.session_state.results[:80]):  # Mostrar mais resultados
+                rare_class = " rare" if result['surprise'] > 80 else ""
                 st.markdown(
-                    f'<div class="grid-item" style="background-color: {result["color"]}" title="Player: {result["player"]}, Banker: {result["banker"]}, Surpresa: {result["surprise"]}%">'
-                    f'{result["player"]}|{result["banker"]} {surprise_badge}'
+                    f'<div class="grid-item{rare_class}" style="background-color: {result["color"]}" title="Jogo: {result["gameNumber"]} | Player: {result["player"]} | Banker: {result["banker"]} | Surpresa: {result["surprise"]}%">'
+                    f'{result["player"]}|{result["banker"]}'
                     '</div>', 
                     unsafe_allow_html=True
                 )
             st.markdown('</div>', unsafe_allow_html=True)
 
-            # Tabela detalhada
-            with st.expander("Ver últimos 10 resultados detalhados"):
-                recent = st.session_state.results[:10]
+            # Tabela detalhada compacta
+            with st.expander("📋 Ver últimos 15 resultados detalhados", expanded=False):
+                recent = st.session_state.results[:15]
                 table_data = []
                 for result in recent:
                     table_data.append({
-                        'Jogo': result['gameNumber'],
+                        '#': result['gameNumber'],
                         'Hora': result['timestamp'],
                         'Player': result['player'],
                         'Banker': result['banker'],
                         'Resultado': result['outcome'],
                         'Surpresa': f"{result['surprise']}%"
                     })
-                st.table(pd.DataFrame(table_data))
+                
+                # Usando uma tabela mais compacta
+                st.dataframe(
+                    pd.DataFrame(table_data),
+                    height=300,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "#": st.column_config.NumberColumn(width="small"),
+                        "Hora": st.column_config.TextColumn(width="small"),
+                        "Player": st.column_config.NumberColumn(width="small"),
+                        "Banker": st.column_config.NumberColumn(width="small"),
+                        "Resultado": st.column_config.TextColumn(width="small"),
+                        "Surpresa": st.column_config.TextColumn(width="small")
+                    }
+                )
         else:
             st.info("Nenhum resultado inserido ainda")
 
@@ -836,7 +868,7 @@ def main():
                 pred = cycle5.get('predictedNext', {})
                 if pred:
                     st.write(f"Próximo: {pred.get('dominant', 'N/A')}")
-                    st.write(f"Conf: {round(pred.get('strength', 0) * 100)}%")  # CORREÇÃO APLICADA AQUI
+                    st.write(f"Conf: {round(pred.get('strength', 0) * 100)}%")
         
         with cols[3]:
             st.metric("🤖 Performance IA", "Sistema")
