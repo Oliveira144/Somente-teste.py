@@ -8,7 +8,7 @@ from collections import defaultdict
 
 # Probabilidades teóricas dos dados (soma de 2 dados)
 DICE_PROBABILITIES = {
-    2: 1/36, 3: 2/36, 4: 3/36, 5: 4/36, 6: 5/36, 7: 6/36,
+    2: 1/36, 3: 2/36, 4: 3: 2/36, 4: 3/36, 5: 4/36, 6: 5/36, 7: 6/36,
     8: 5/36, 9: 4/36, 10: 3/36, 11: 2/36, 12: 1/36
 }
 
@@ -56,13 +56,13 @@ def add_result(player_score, banker_score):
 
     if pScore > bScore:
         outcome = 'PLAYER'
-        color = 'blue'
+        color = '#4285F4' # Blue for Player
     elif bScore > pScore:
         outcome = 'BANKER'
-        color = 'red'
+        color = '#EA4335' # Red for Banker
     else:
         outcome = 'TIE'
-        color = 'green'
+        color = '#34A853' # Green for Tie
 
     new_result = {
         'id': time.time(),
@@ -536,7 +536,7 @@ def get_best_recommendation():
             'type': 'PLAYER',
             'reason': 'Recomendação padrão (sem comissão)',
             'confidence': 52,
-            'color': 'blue',
+            'color': '#4285F4',
             'algorithm': 'DEFAULT'
         }
 
@@ -565,7 +565,7 @@ def get_best_recommendation():
         'type': recommended_type,
         'reason': f'Consenso de {supporting} algoritmo(s)',
         'confidence': round(avg_confidence),
-        'color': 'blue' if recommended_type == 'PLAYER' else 'red' if recommended_type == 'BANKER' else 'green' if recommended_type == 'TIE' else 'yellow',
+        'color': '#4285F4' if recommended_type == 'PLAYER' else '#EA4335' if recommended_type == 'BANKER' else '#34A853' if recommended_type == 'TIE' else 'yellow',
         'algorithm': 'CONSENSUS',
         'supportingAlgorithms': supporting
     }
@@ -626,267 +626,187 @@ def main():
         }
         
         .history-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 6px;
-            margin-bottom: 15px;
+            display: flex; /* Use flexbox for horizontal layout */
+            flex-wrap: wrap; /* Allow items to wrap to the next line */
+            gap: 10px; /* Space between items */
+            justify-content: flex-start; /* Align items to the start */
+            padding: 10px 0;
         }
-        
         .history-item {
-            min-width: 30px;
-            height: 30px;
+            width: 50px; /* Fixed width for each item */
+            height: 50px; /* Fixed height for each item */
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column; /* Stack player and banker scores vertically */
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            padding: 2px; /* Small padding inside the box */
+            box-sizing: border-box; /* Include padding in width/height */
+        }
+        .score-display {
+            font-size: 0.9em; /* Adjust font size for scores */
+            line-height: 1.2; /* Adjust line height for vertical spacing */
+        }
+        .player-score {
+            color: white; /* Player score is white on colored background */
+        }
+        .banker-score {
+            color: white; /* Banker score is white on colored background */
+        }
+        .header-section {
+            background-color: #1e2130;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            font-size: 14px;
+        }
+        .header-section h3 {
+            margin: 0;
+            color: #fff;
+            margin-left: 10px;
+        }
+        .stButton>button {
+            width: 100%;
+            border-radius: 8px;
+            height: 50px;
+            font-size: 1.1em;
             font-weight: bold;
-            background-color: #0e1117;
         }
-        
-        .player-item {
-            color: #4cc9f0;
-            background-color: rgba(76, 201, 240, 0.1);
-            border: 1px solid #4cc9f0;
-        }
-        
-        .banker-item {
-            color: #f72585;
-            background-color: rgba(247, 37, 133, 0.1);
-            border: 1px solid #f72585;
-        }
-        
-        .tie-item {
-            color: #2ec4b6;
-            background-color: rgba(46, 196, 182, 0.1);
-            border: 1px solid #2ec4b6;
-        }
-        
-        .input-container {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin: 15px 0;
-        }
-        
-        .input-box {
+        .stTextInput>div>div>input {
+            border-radius: 8px;
+            height: 50px;
+            font-size: 1.1em;
             text-align: center;
-            padding: 8px;
-            border-radius: 8px;
-            background-color: #1e2130;
-            min-width: 100px;
         }
-        
-        .input-label {
-            font-size: 12px;
-            color: #aaa;
-            margin-bottom: 3px;
-        }
-        
-        .input-value {
-            font-size: 20px;
-            font-weight: bold;
-        }
-        
-        .stat-card {
+        .stMetric {
             background-color: #1e2130;
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
-            border-left: 3px solid #4a4e69;
-        }
-        
-        .metric-box {
-            background-color: #1e2130;
-            border-radius: 8px;
-            padding: 12px;
+            padding: 10px;
             text-align: center;
-            margin-bottom: 10px;
+            color: #fff;
+            border: 1px solid #4a4e69;
         }
-        
-        .metric-value {
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 5px;
+        .stMetric > div > div > div > div > div {
+            color: #fff !important;
         }
-        
-        .metric-label {
-            font-size: 12px;
-            color: #aaa;
+        .stMetric > div > div > div {
+            color: #fff !important;
+        }
+        .stProgress > div > div > div > div {
+            background-color: #4CAF50;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #fff;
+        }
+        p {
+            color: #ccc;
+        }
+        .stAlert {
+            border-radius: 8px;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    st.title("🎲 Bac Bo Analyzer PRO")
-    st.caption("Sistema avançado de análise de padrões para Bac Bo - v2.0")
-
-    # Atualizar estatísticas
-    st.session_state.current_stats = calculate_basic_stats()
-    perform_advanced_analysis()
-
-    # Layout principal
-    col1, col2 = st.columns([1, 2])
-
-    with col1:
-        st.subheader("📊 Estatísticas Atuais")
-        st.write(f"Total de Jogos: {st.session_state.current_stats['totalGames']}")
-        
-        # Métricas de desempenho
-        st.markdown("""
-        <div class="stat-card">
-            <div style="font-size: 12px; color: #aaa;">🤖 Performance IA</div>
-            <div style="font-size: 20px; font-weight: bold;">Sistema</div>
+    # Header Section
+    st.markdown("""
+        <div class="header-section">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-bar-chart-2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            <h3>Historico de Resultados</h3>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Botões de entrada
-        with st.form("entry_form"):
-            st.subheader("🎮 Adicionar Resultado")
-            
-            col_p, col_b = st.columns(2)
-            
-            with col_p:
-                st.markdown('<div class="input-label">PLAYER</div>', unsafe_allow_html=True)
-                p_score = st.selectbox("Player", options=list(range(2, 13)), label_visibility="collapsed")
-                
-            with col_b:
-                st.markdown('<div class="input-label">BANKER</div>', unsafe_allow_html=True)
-                b_score = st.selectbox("Banker", options=list(range(2, 13)), label_visibility="collapsed")
-            
-            # Visualização dos dados selecionados
-            st.markdown(f"""
-            <div class="input-container">
-                <div class="input-box">
-                    <div class="input-label">PLAYER</div>
-                    <div class="input-value">{p_score}</div>
-                </div>
-                <div class="input-box">
-                    <div class="input-label">BANKER</div>
-                    <div class="input-value">{b_score}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if st.form_submit_button("🎯 Registrar Resultado", use_container_width=True):
-                add_result(p_score, b_score)
-                st.rerun()
-
-    with col2:
-        st.subheader("📈 Análise Avançada")
-        
-        # Exibição de recomendações
-        recommendation = get_best_recommendation()
-        st.markdown(f"""
-        <div class="recommendation-box" style="border-color: {recommendation['color']};">
-            <h3 style="margin:0; font-size:18px;">🎯 RECOMENDAÇÃO: {recommendation['type']}</h3>
-            <p style="margin:5px 0;">Confiança: {recommendation['confidence']}%</p>
-            <p style="margin:0; font-size:14px;">{recommendation['reason']}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Histórico de resultados - Formato compacto
-        st.subheader("⏱️ Histórico Recente")
-        
-        if not st.session_state.results:
-            st.info("Nenhum resultado registrado ainda")
-        else:
-            # Exibir os resultados em uma grade de 6 colunas
-            results_to_display = st.session_state.results[:18]  # Mostrar até 18 resultados
-            
-            # Calcular o número de linhas necessárias (arredondar para cima)
-            num_rows = (len(results_to_display) + 5) // 6
-            
-            st.markdown('<div class="history-grid">', unsafe_allow_html=True)
-            
-            for result in results_to_display:
-                # Determinar a classe CSS baseada no resultado
-                if result['outcome'] == 'PLAYER':
-                    css_class = "player-item"
-                elif result['outcome'] == 'BANKER':
-                    css_class = "banker-item"
-                else:
-                    css_class = "tie-item"
-                
-                st.markdown(
-                    f'<div class="history-item {css_class}">{result["player"]}-{result["banker"]}</div>',
-                    unsafe_allow_html=True
-                )
-            
-            # Preencher com itens vazios se a grade não estiver completa
-            remaining = 18 - len(results_to_display)
-            for _ in range(remaining):
-                st.markdown('<div class="history-item"></div>', unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-
-    # Seção de análise detalhada
-    st.divider()
-    st.subheader("🔍 Análise Detalhada")
     
-    if st.session_state.results:
-        analysis = st.session_state.advanced_analysis
-        
-        # Verificações de segurança
-        confidence = analysis.get('confidence', 0)
-        volatility = analysis.get('volatility', 0)
-        risk_level = analysis.get('riskLevel', 'N/A')
-        momentum = analysis.get('momentum', {})
-        patterns = analysis.get('patterns', {})
-        
-        alternations = patterns.get('alternations', {})
-        alternation_pattern = alternations.get('pattern', 'N/A')
-        
-        a_col1, a_col2, a_col3 = st.columns(3)
-        
-        with a_col1:
-            st.markdown("""
-            <div class="metric-box">
-                <div class="metric-label">📈 Confiança do Sistema</div>
-                <div class="metric-value">{confidence}%</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-label">⚡ Volatilidade</div>
-                <div class="metric-value">{volatility}%</div>
-            </div>
-            """.format(confidence=confidence, volatility=volatility), unsafe_allow_html=True)
-            
-        with a_col2:
-            if momentum:
-                direction = momentum.get('direction', 'N/A')
-                strength = momentum.get('strength', 0)
-                st.markdown("""
-                <div class="metric-box">
-                    <div class="metric-label">📊 Momentum Atual</div>
-                    <div class="metric-value">{direction}</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">💪 Força do Momentum</div>
-                    <div class="metric-value">{strength:.1f}%</div>
-                </div>
-                """.format(direction=direction, strength=strength*100), unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                <div class="metric-box">
-                    <div class="metric-label">📊 Momentum Atual</div>
-                    <div class="metric-value">N/A</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">💪 Força do Momentum</div>
-                    <div class="metric-value">N/A</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-        with a_col3:
-            st.markdown("""
-            <div class="metric-box">
-                <div class="metric-label">⚠️ Nível de Risco</div>
-                <div class="metric-value">{risk_level}</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-label">🔄 Padrão de Alternância</div>
-                <div class="metric-value">{alternation_pattern}</div>
-            </div>
-            """.format(risk_level=risk_level, alternation_pattern=alternation_pattern), unsafe_allow_html=True)
+    # History Display
+    st.markdown('<div class="history-grid">', unsafe_allow_html=True)
+    # Display up to 8 recent results, matching the image.
+    for result in st.session_state.results[:8]: # Limit to 8 results for display
+        st.markdown(f"""
+        <div class="history-item" style="background-color: {result['color']};">
+            <div class="score-display player-score">{result['player']}</div>
+            <div class="score-display banker-score">{result['banker']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-if __name__ == "__main__":
+    st.markdown("---")
+
+    # Input for new results
+    st.header("Adicionar Novo Resultado")
+    col1, col2 = st.columns(2)
+    with col1:
+        player_input = st.text_input("Pontuação do Player", key="player_score_input")
+    with col2:
+        banker_input = st.text_input("Pontuação do Banker", key="banker_score_input")
+
+    if st.button("Adicionar Resultado"):
+        if player_input and banker_input:
+            add_result(player_input, banker_input)
+            st.rerun()
+        else:
+            st.error("Por favor, preencha ambas as pontuações.")
+
+    st.markdown("---")
+
+    # Current Statistics
+    st.header("Estatísticas Atuais")
+    stats = st.session_state.current_stats
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric(label="Total de Jogos", value=stats['totalGames'])
+    with col2:
+        st.metric(label="Player", value=f"{stats['player']} ({stats['player']/stats['totalGames']*100:.1f}%)" if stats['totalGames'] > 0 else "0 (0%)")
+    with col3:
+        st.metric(label="Banker", value=f"{stats['banker']} ({stats['banker']/stats['totalGames']*100:.1f}%)" if stats['totalGames'] > 0 else "0 (0%)")
+    with col4:
+        st.metric(label="Tie", value=f"{stats['tie']} ({stats['tie']/stats['totalGames']*100:.1f}%)" if stats['totalGames'] > 0 else "0 (0%)")
+
+    st.markdown("---")
+
+    # Recommendation
+    st.header("Recomendação Inteligente")
+    recommendation = get_best_recommendation()
+    st.markdown(f"""
+    <div class="recommendation-box" style="background-color: {recommendation['color']};">
+        <h4>Ação Recomendada: {recommendation['type']}</h4>
+        <p>{recommendation['reason']}</p>
+        <p>Confiança: {recommendation['confidence']}%</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Advanced Analysis Details (optional, could be in an expander)
+    st.markdown("---")
+    st.header("Análise Avançada")
+    analysis = st.session_state.advanced_analysis
+
+    if analysis and st.session_state.results:
+        st.subheader("Padrões e Tendências")
+        st.json(analysis['patterns'])
+
+        st.subheader("Tendências Cíclicas")
+        st.json(analysis['cyclicalTrends'])
+
+        st.subheader("Volatilidade e Momento")
+        col_v, col_m = st.columns(2)
+        with col_v:
+            st.metric("Volatilidade do Jogo", f"{analysis['volatility']}%")
+        with col_m:
+            momentum_dir = analysis['momentum'].get('direction', 'N/A')
+            momentum_str = analysis['momentum'].get('strength', 0)
+            st.metric("Momento Atual", f"{momentum_dir} (Força: {momentum_str:.2f})")
+        
+        st.subheader("Nível de Risco")
+        risk_color = "green" if analysis['riskLevel'] == 'LOW' else "orange" if analysis['riskLevel'] == 'MEDIUM' else "red"
+        st.markdown(f"<p style='color:{risk_color}; font-weight:bold;'>Risco: {analysis['riskLevel']}</p>", unsafe_allow_html=True)
+
+        st.subheader("Previsões por Algoritmo")
+        for pred in analysis['predictions']:
+            st.write(f"**Algoritmo:** {pred['algorithm']} - **Previsão:** {pred['type']} - **Confiança:** {pred['confidence']}% - **Razão:** {pred['reason']}")
+    elif not st.session_state.results:
+        st.info("Adicione resultados para ver a análise avançada.")
+
+if __name__ == '__main__':
     main()
+
