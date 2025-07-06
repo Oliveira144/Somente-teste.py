@@ -709,11 +709,11 @@ estrategias = [
     
     {"nome": "Sistema Preditor", 
      "funcao": lambda df: 
-         np.argmax(previsao_avancada(
+         ["P", "B", "T"][np.argmax(previsao_avancada(
              df[["Player", "Banker"]].values[:-1], 
              df["Resultado"].values[1:],
              df[["Player", "Banker"]].values[-1].reshape(1, -1)
-         ) if len(df) > 15 else "B",
+         )] if len(df) > 15 else "B",
      "desc": "Usa o modelo de machine learning para prever"}
 ]
 
